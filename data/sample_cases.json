@@ -1,0 +1,8 @@
+[
+  {
+    "id": "dose-and-allergy-drift",
+    "source": "Patient reports headaches for 3 days. Patient is allergic to penicillin. Patient takes metformin 500 mg twice a day. Blood pressure is 122/78.",
+    "transformed": "Patient reports headaches for 3 weeks. No known drug allergies. Patient takes metformin 1000 mg twice a day. Blood pressure is 122/78.",
+    "expected": ["duration drift", "allergy/negation contradiction", "dosage drift"]
+  }
+]
