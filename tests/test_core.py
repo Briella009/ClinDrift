@@ -30,3 +30,117 @@ def test_duration_drift():
     transformed = extract_facts("Headache for 3 weeks.")
     findings = compare_facts(source, transformed)
     assert any(f.drift_type == "Duration drift" for f in findings)
+def test_semantic_duration_equivalence():
+    from src.extractor import extract_facts
+    from src.drift_engine import compare_facts
+
+    source = extract_facts(
+        "Patient reports headaches for 3 days."
+    )
+
+    transformed = extract_facts(
+        "Patient reports headaches for three days."
+    )
+
+    findings = compare_facts(source, transformed)
+
+    duration_findings = [
+        finding
+        for finding in findings
+        if finding.drift_type == "Duration drift"
+        or (
+            finding.drift_type == "Omission"
+            and finding.source_value in {"3 days", "three days"}
+        )
+    ]
+
+    assert duration_findings == []
+
+
+def test_semantic_frequency_equivalence():
+    from src.extractor import extract_facts
+    from src.drift_engine import compare_facts
+
+    source = extract_facts(
+        "Patient takes metformin 500 mg twice a day."
+    )
+
+    transformed = extract_facts(
+        "Patient takes metformin 500 mg twice daily."
+    )
+
+    findings = compare_facts(source, transformed)
+
+    frequency_findings = [
+        finding
+        for finding in findings
+        if finding.drift_type == "Frequency drift"
+        or (
+            finding.drift_type == "Omission"
+            and finding.source_value in {
+                "twice a day",
+                "twice daily",
+            }
+        )
+    ]
+
+    assert frequency_findings == []
+
+
+def test_real_frequency_change_still_detected():
+    from src.extractor import extract_facts
+    from src.drift_engine import compare_facts
+
+    source = extract_facts(
+        "Patient takes metformin 500 mg twice a day."
+    )
+
+    transformed = extract_facts(
+        "Patient takes metformin 500 mg once a day."
+    )
+
+    findings = compare_facts(source, transformed)
+
+    frequency_findings = [
+        finding
+        for finding in findings
+        if finding.drift_type == "Frequency drift"
+    ]
+
+    assert len(frequency_findings) == 1
+
+    finding = frequency_findings[0]
+
+    assert finding.source_value == "twice a day"
+    assert finding.transformed_value == "once a day"
+    assert finding.severity == "High"
+
+
+def test_cross_unit_duration_equivalence():
+    from src.extractor import extract_facts
+    from src.drift_engine import compare_facts
+
+    source = extract_facts(
+        "Symptoms have persisted for 7 days."
+    )
+
+    transformed = extract_facts(
+        "Symptoms have persisted for one week."
+    )
+
+    findings = compare_facts(source, transformed)
+
+    duration_findings = [
+        finding
+        for finding in findings
+        if finding.drift_type == "Duration drift"
+        or (
+            finding.drift_type == "Omission"
+            and finding.source_value in {
+                "7 days",
+                "one week",
+            }
+        )
+    ]
+
+    assert duration_findings == []
