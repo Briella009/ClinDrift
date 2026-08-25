@@ -1,34 +1,29 @@
+"""
+ClinDrift clinical fact extractor.
+
+Extracts structured, comparison-oriented facts from clinical text for use
+by the ClinDrift information-integrity engine.
+
+This module intentionally uses deterministic extraction rather than
+diagnostic or generative reasoning. It is designed for research,
+evaluation, reproducibility, and evidence traceability.
+
+ClinDrift is a research prototype and is not a medical device.
+"""
+
 from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass
-from typing import Dict, Iterable, List, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 
-# =============================================================================
-# DATA MODEL
-# =============================================================================
+# ---------------------------------------------------------------------------
+# Clinical fact model
+# ---------------------------------------------------------------------------
 
-
-@dataclass(frozen=True)
+@dataclass
 class ClinicalFact:
-    """
-    A single clinical-information fact extracted from text.
-
-    category:
-        The type of information extracted, for example:
-        medication, allergy, dosage, measurement, duration or frequency.
-
-    value:
-        The extracted value used by the comparison engine.
-
-    evidence:
-        The original sentence from which the fact was extracted.
-
-    ClinDrift intentionally preserves evidence separately from later semantic
-    normalisation so that reviewers can always inspect the original wording.
-    """
-
     category: str
     value: str
     evidence: str
@@ -37,49 +32,49 @@ class ClinicalFact:
         return asdict(self)
 
 
-# =============================================================================
-# NUMBER EXPRESSIONS
-# =============================================================================
+# ---------------------------------------------------------------------------
+# Number vocabulary
+# ---------------------------------------------------------------------------
+
+NUMBER_WORDS = {
+    "zero": "0",
+    "one": "1",
+    "two": "2",
+    "three": "3",
+    "four": "4",
+    "five": "5",
+    "six": "6",
+    "seven": "7",
+    "eight": "8",
+    "nine": "9",
+    "ten": "10",
+    "eleven": "11",
+    "twelve": "12",
+}
 
 
-# v0.2 expands duration extraction beyond digits.
-#
-# Examples now supported:
-#
-#   3 days
-#   three days
-#   7 days
-#   one week
-#   twenty days
-#
-# Comparison equivalence itself is handled by drift_engine.py.
-
-NUMBER_WORD_PATTERN = (
+NUMBER_TOKEN = (
     r"(?:"
-    r"zero|one|two|three|four|five|six|seven|eight|nine|ten|"
-    r"eleven|twelve|thirteen|fourteen|fifteen|sixteen|"
-    r"seventeen|eighteen|nineteen|twenty|thirty|forty|"
-    r"fifty|sixty|seventy|eighty|ninety"
+    r"\d+(?:\.\d+)?|"
+    r"zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve"
     r")"
 )
 
-NUMBER_OR_DIGIT_PATTERN = rf"(?:\d+|{NUMBER_WORD_PATTERN})"
 
-
-# =============================================================================
-# CORE EXTRACTION PATTERNS
-# =============================================================================
-
+# ---------------------------------------------------------------------------
+# Dosage extraction
+# ---------------------------------------------------------------------------
 
 DOSAGE_RE = re.compile(
-    r"\b"
-    r"\d+(?:\.\d+)?"
-    r"\s*"
-    r"(?:mg|mcg|g|kg|ml|l|units?)"
-    r"\b",
-    re.IGNORECASE,
+    rf"\b{NUMBER_TOKEN}\s*"
+    r"(?:mcg|mg|g|ml|units?)\b",
+    re.I,
 )
 
+
+# ---------------------------------------------------------------------------
+# Blood pressure / measurement extraction
+# ---------------------------------------------------------------------------
 
 BP_RE = re.compile(
     r"\b"
@@ -90,55 +85,98 @@ BP_RE = re.compile(
 )
 
 
+# ---------------------------------------------------------------------------
+# Duration extraction
+# ---------------------------------------------------------------------------
+
 DURATION_RE = re.compile(
-    rf"\b"
-    rf"{NUMBER_OR_DIGIT_PATTERN}"
-    rf"\s+"
-    rf"(?:hours?|days?|weeks?|months?|years?)"
-    rf"\b",
-    re.IGNORECASE,
+    rf"\b{NUMBER_TOKEN}\s+"
+    r"(?:hours?|days?|weeks?|months?|years?)\b",
+    re.I,
 )
 
 
+# ---------------------------------------------------------------------------
+# Frequency extraction
+# ---------------------------------------------------------------------------
+#
 # IMPORTANT:
-# More specific frequency expressions must appear before generic forms such
-# as "daily". This prevents:
 #
-#     "twice daily"
+# Longer semantic phrases are intentionally placed BEFORE short aliases
+# such as "daily".
 #
-# from being extracted merely as:
+# Otherwise:
+#
+#     "two times daily"
+#
+# can be extracted merely as:
 #
 #     "daily"
 #
-# That surface-form loss caused one of the ClinDrift v0.1 false positives.
+# which creates a false Frequency drift when compared with:
+#
+#     "twice a day"
+#
+# Both complete phrases must reach drift_engine.py so that the semantic
+# canonicalisation layer can compare them correctly.
+# ---------------------------------------------------------------------------
 
 FREQUENCY_RE = re.compile(
-    r"\b(?:once|twice|three times|four times)\s+"
-    r"(?:(?:a|per)\s+day|daily)\b"
+    r"\b(?:"
+    # once / twice
+    r"(?:once|twice)\s+(?:a|per)\s+(?:day|week|month)"
     r"|"
-    r"\bevery\s+(?:morning|evening|night|day|week)\b"
+    r"(?:once|twice)\s+(?:daily|weekly|monthly)"
     r"|"
-    r"\b(?:daily|weekly|nightly|morning|evening)\b",
-    re.IGNORECASE,
+
+    # word-number "times" expressions
+    r"(?:one|two|three|four|five|six|seven|eight|nine|ten)"
+    r"\s+times?\s+(?:a|per)\s+(?:day|week|month)"
+    r"|"
+    r"(?:one|two|three|four|five|six|seven|eight|nine|ten)"
+    r"\s+times?\s+(?:daily|weekly|monthly)"
+    r"|"
+
+    # numeric "times" expressions
+    r"\d+\s+times?\s+(?:a|per)\s+(?:day|week|month)"
+    r"|"
+    r"\d+\s+times?\s+(?:daily|weekly|monthly)"
+    r"|"
+
+    # standalone conventional frequency terms
+    r"daily"
+    r"|weekly"
+    r"|monthly"
+    r"|nightly"
+    r"|every\s+night"
+    r"|every\s+morning"
+    r"|every\s+evening"
+    r"|morning"
+    r"|evening"
+    r")\b",
+    re.I,
 )
 
+
+# ---------------------------------------------------------------------------
+# Laterality extraction
+# ---------------------------------------------------------------------------
 
 LATERALITY_RE = re.compile(
     r"\b(?:left|right|bilateral)\b",
-    re.IGNORECASE,
+    re.I,
 )
 
 
-# =============================================================================
-# MEDICATION VOCABULARY
-# =============================================================================
-
-
-# This remains intentionally small and transparent for the research prototype.
+# ---------------------------------------------------------------------------
+# Medication vocabulary
+# ---------------------------------------------------------------------------
 #
-# ClinDrift v0.2 should not pretend this is a comprehensive pharmaceutical
-# ontology. A future version can replace or supplement this list with a
-# validated terminology source.
+# v0.2 uses a deliberately bounded medication vocabulary.
+#
+# This keeps extraction deterministic and auditable. Expansion should be
+# evaluated rather than silently treating arbitrary words as medications.
+# ---------------------------------------------------------------------------
 
 MEDICATION_HINTS = {
     "acetaminophen",
@@ -157,139 +195,179 @@ MEDICATION_HINTS = {
 }
 
 
-# =============================================================================
-# ALLERGY EXTRACTION
-# =============================================================================
-
-
-# Pattern 1:
-#   Patient is allergic to penicillin.
-#
-# Pattern 2:
-#   Patient has a penicillin allergy.
-#
-# Capture is deliberately stopped before common sentence punctuation.
+# ---------------------------------------------------------------------------
+# Allergy patterns
+# ---------------------------------------------------------------------------
 
 ALLERGY_PATTERNS: Sequence[re.Pattern[str]] = (
+    # Patient is allergic to penicillin.
     re.compile(
         r"\ballergic\s+to\s+"
-        r"([a-zA-Z0-9][a-zA-Z0-9\- ]*?)"
-        r"(?=\s*(?:[.,;!?]|$))",
-        re.IGNORECASE,
+        r"([a-zA-Z][a-zA-Z0-9\-]*)",
+        re.I,
     ),
+
+    # Penicillin allergy.
     re.compile(
-        r"\b"
-        r"([a-zA-Z0-9][a-zA-Z0-9\-]*)"
-        r"\s+allergy\b",
-        re.IGNORECASE,
+        r"\b([a-zA-Z][a-zA-Z0-9\-]*)\s+allerg(?:y|ies)\b",
+        re.I,
+    ),
+
+    # Allergy to penicillin.
+    re.compile(
+        r"\ballerg(?:y|ies)\s+to\s+"
+        r"([a-zA-Z][a-zA-Z0-9\-]*)",
+        re.I,
     ),
 )
 
 
-# =============================================================================
-# NEGATION EXTRACTION
-# =============================================================================
-
-
-# General natural-language negation reasoning is deliberately not claimed here.
-#
-# These are explicit patterns currently supported by the research prototype.
-#
-# More advanced assertion-polarity detection will be evaluated separately.
+# ---------------------------------------------------------------------------
+# Negation patterns
+# ---------------------------------------------------------------------------
 
 NEGATION_PATTERNS: Sequence[re.Pattern[str]] = (
     re.compile(
-        r"\bno known (?:drug )?allerg(?:y|ies)\b",
-        re.IGNORECASE,
+        r"\bno\s+known\s+(?:drug\s+)?allerg(?:y|ies)\b",
+        re.I,
     ),
+
     re.compile(
-        r"\bdenies\s+([^.,;!?]+)",
-        re.IGNORECASE,
+        r"\bdenies\s+([^.,;]+)",
+        re.I,
     ),
+
     re.compile(
-        r"\bno history of\s+([^.,;!?]+)",
-        re.IGNORECASE,
+        r"\bno\s+history\s+of\s+([^.,;]+)",
+        re.I,
     ),
+
     re.compile(
-        r"\bnot taking\s+([^.,;!?]+)",
-        re.IGNORECASE,
+        r"\bnot\s+taking\s+([^.,;]+)",
+        re.I,
     ),
 )
 
 
-# =============================================================================
-# TEXT HELPERS
-# =============================================================================
-
+# ---------------------------------------------------------------------------
+# Utility functions
+# ---------------------------------------------------------------------------
 
 def _normalise_space(value: str) -> str:
-    """
-    Collapse repeated whitespace without changing substantive wording.
-    """
-
-    return re.sub(
-        r"\s+",
-        " ",
-        value,
-    ).strip()
+    return re.sub(r"\s+", " ", value.strip())
 
 
 def _clean_capture(value: str) -> str:
-    """
-    Clean punctuation surrounding an extracted fact while preserving the
-    original semantic content.
-    """
-
     value = _normalise_space(value)
-
-    return value.strip(
-        " .,:;!?()[]{}"
-    )
+    return value.strip(" .,:;").lower()
 
 
 def _sentences(text: str) -> List[str]:
     """
-    Lightweight sentence splitter.
+    Split text into lightweight evidence spans.
 
-    It preserves sentence text because ClinDrift uses the sentence as
-    claim-level evidence.
-
-    This is intentionally deterministic and dependency-light.
+    Evidence is deliberately retained at sentence level so every extracted
+    fact can later be traced back to the text that produced it.
     """
 
     if not text:
         return []
 
-    cleaned = text.strip()
-
-    if not cleaned:
-        return []
-
     chunks = re.split(
         r"(?<=[.!?])\s+|\n+",
-        cleaned,
+        text.strip(),
     )
 
     return [
-        _normalise_space(chunk)
+        chunk.strip()
         for chunk in chunks
-        if chunk and chunk.strip()
+        if chunk.strip()
     ]
 
 
-# =============================================================================
-# ALLERGY HELPERS
-# =============================================================================
+def _normalise_dosage(value: str) -> str:
+    """
+    Normalise spacing only.
 
+    500 mg -> 500mg
+    500mg  -> 500mg
+
+    Unit conversion itself belongs to drift_engine.py.
+    """
+
+    value = _clean_capture(value)
+
+    return re.sub(
+        r"\s+",
+        "",
+        value,
+    )
+
+
+def _normalise_measurement(value: str) -> str:
+    """
+    Normalise spacing around blood-pressure separators.
+
+    122 / 78 -> 122/78
+    """
+
+    return re.sub(
+        r"\s+",
+        "",
+        _clean_capture(value),
+    )
+
+
+def _normalise_duration(value: str) -> str:
+    """
+    Preserve meaningful duration wording.
+
+    Examples:
+
+        7 days
+        one week
+        three days
+
+    Cross-unit semantic conversion occurs in drift_engine.py.
+    """
+
+    return _clean_capture(value)
+
+
+def _normalise_frequency(value: str) -> str:
+    """
+    Preserve the complete frequency phrase.
+
+    This is important because drift_engine.py is responsible for semantic
+    canonicalisation.
+
+    Examples preserved here:
+
+        twice a day
+        two times daily
+        once a day
+        three times daily
+    """
+
+    return _clean_capture(value)
+
+
+def _normalise_laterality(value: str) -> str:
+    return _clean_capture(value)
+
+
+# ---------------------------------------------------------------------------
+# Allergy span handling
+# ---------------------------------------------------------------------------
 
 def _extract_allergies(
     sentence: str,
 ) -> Tuple[List[ClinicalFact], List[Tuple[int, int]]]:
     """
-    Extract allergy facts and return their text spans.
+    Extract allergies and return both facts and matched spans.
 
-    Returning spans allows medication extraction to avoid treating a drug
-    mentioned solely as an allergen as an active medication.
+    The spans are used to prevent a drug appearing only as an allergen from
+    also being incorrectly classified as an active medication.
 
     Example:
 
@@ -297,11 +375,11 @@ def _extract_allergies(
 
     should produce:
 
-        allergy = penicillin
+        allergy -> penicillin
 
-    but should NOT additionally produce:
+    but should NOT also produce:
 
-        medication = penicillin
+        medication -> penicillin
     """
 
     facts: List[ClinicalFact] = []
@@ -309,9 +387,7 @@ def _extract_allergies(
 
     for pattern in ALLERGY_PATTERNS:
         for match in pattern.finditer(sentence):
-            value = _clean_capture(
-                match.group(1)
-            ).lower()
+            value = _clean_capture(match.group(1))
 
             if not value:
                 continue
@@ -324,9 +400,7 @@ def _extract_allergies(
                 )
             )
 
-            spans.append(
-                match.span()
-            )
+            spans.append(match.span())
 
     return facts, spans
 
@@ -334,12 +408,8 @@ def _extract_allergies(
 def _inside_any_span(
     start: int,
     end: int,
-    spans: Iterable[Tuple[int, int]],
+    spans: Sequence[Tuple[int, int]],
 ) -> bool:
-    """
-    Return True when the supplied range occurs within any protected span.
-    """
-
     for span_start, span_end in spans:
         if start >= span_start and end <= span_end:
             return True
@@ -347,92 +417,74 @@ def _inside_any_span(
     return False
 
 
-# =============================================================================
-# EXTRACTION
-# =============================================================================
+# ---------------------------------------------------------------------------
+# Main extractor
+# ---------------------------------------------------------------------------
 
-
-def extract_facts(
-    text: str,
-) -> List[ClinicalFact]:
+def extract_facts(text: str) -> List[ClinicalFact]:
     """
-    Extract supported clinical facts from free clinical text.
+    Extract comparison-oriented clinical facts from text.
 
-    Design goals:
+    Current v0.2 categories:
 
-    1. deterministic behaviour;
-    2. transparent extraction;
-    3. original evidence preservation;
-    4. semantic-equivalence support through richer extraction;
-    5. minimal external dependencies;
-    6. no claim of comprehensive clinical NLP.
+        allergy
+        negation
+        medication
+        dosage
+        measurement
+        duration
+        frequency
+        laterality
 
-    Semantic normalisation is intentionally handled by drift_engine.py rather
-    than rewriting evidence here.
+    Each fact retains its source evidence span.
     """
 
     facts: List[ClinicalFact] = []
 
     for sentence in _sentences(text):
-        lower_sentence = sentence.lower()
+        lower = sentence.lower()
 
-        # =====================================================================
-        # ALLERGIES
-        # =====================================================================
+        # -----------------------------------------------------------------
+        # Allergies first
+        # -----------------------------------------------------------------
 
-        allergy_facts, allergy_spans = _extract_allergies(
-            sentence
-        )
+        allergy_facts, allergy_spans = _extract_allergies(sentence)
 
-        facts.extend(
-            allergy_facts
-        )
+        facts.extend(allergy_facts)
 
-        # =====================================================================
-        # NEGATIONS
-        # =====================================================================
+        # -----------------------------------------------------------------
+        # Negation
+        # -----------------------------------------------------------------
 
         for pattern in NEGATION_PATTERNS:
             for match in pattern.finditer(sentence):
-                value = _clean_capture(
-                    match.group(0)
-                ).lower()
+                value = _clean_capture(match.group(0))
 
-                if not value:
-                    continue
-
-                facts.append(
-                    ClinicalFact(
-                        category="negation",
-                        value=value,
-                        evidence=sentence,
+                if value:
+                    facts.append(
+                        ClinicalFact(
+                            category="negation",
+                            value=value,
+                            evidence=sentence,
+                        )
                     )
-                )
 
-        # =====================================================================
-        # MEDICATIONS
-        # =====================================================================
+        # -----------------------------------------------------------------
+        # Medication
+        # -----------------------------------------------------------------
 
-        for medication in sorted(
-            MEDICATION_HINTS,
-            key=len,
-            reverse=True,
-        ):
-            medication_pattern = re.compile(
+        for medication in sorted(MEDICATION_HINTS):
+            medication_re = re.compile(
                 rf"\b{re.escape(medication)}\b",
-                re.IGNORECASE,
+                re.I,
             )
 
-            for medication_match in medication_pattern.finditer(
-                sentence
-            ):
-                start, end = medication_match.span()
-
-                # If the medication word occurs inside an allergy expression,
-                # do not automatically treat it as an active medication.
+            for match in medication_re.finditer(sentence):
+                # A drug mentioned solely inside an allergy statement is not
+                # automatically an active medication.
                 if _inside_any_span(
-                    start,
-                    end,
+                    match.start(),
+                    match.end(),
                     allergy_spans,
                 ):
                     continue
@@ -445,68 +497,68 @@ def extract_facts(
                     )
                 )
 
-        # =====================================================================
-        # DOSAGE
-        # =====================================================================
+        # -----------------------------------------------------------------
+        # Dosage
+        # -----------------------------------------------------------------
 
         for match in DOSAGE_RE.finditer(sentence):
-            value = (
-                match.group(0)
-                .lower()
-                .replace(" ", "")
-            )
-
             facts.append(
                 ClinicalFact(
                     category="dosage",
-                    value=value,
+                    value=_normalise_dosage(match.group(0)),
                     evidence=sentence,
                 )
             )
 
-        # =====================================================================
-        # MEASUREMENT
-        # =====================================================================
+        # -----------------------------------------------------------------
+        # Measurement
+        # -----------------------------------------------------------------
 
         for match in BP_RE.finditer(sentence):
-            value = (
-                match.group(0)
-                .replace(" ", "")
-            )
-
             facts.append(
                 ClinicalFact(
                     category="measurement",
-                    value=value,
+                    value=_normalise_measurement(match.group(0)),
                     evidence=sentence,
                 )
             )
 
-        # =====================================================================
-        # DURATION
-        # =====================================================================
+        # -----------------------------------------------------------------
+        # Duration
+        # -----------------------------------------------------------------
 
         for match in DURATION_RE.finditer(sentence):
-            value = _normalise_space(
-                match.group(0).lower()
-            )
-
             facts.append(
                 ClinicalFact(
                     category="duration",
-                    value=value,
+                    value=_normalise_duration(match.group(0)),
                     evidence=sentence,
                 )
             )
 
-        # =====================================================================
-        # FREQUENCY
-        # =====================================================================
+        # -----------------------------------------------------------------
+        # Frequency
+        # -----------------------------------------------------------------
+        #
+        # finditer() returns the complete longest applicable expression
+        # because the compound alternatives precede standalone "daily".
+        #
+        # Thus:
+        #
+        #     two times daily
+        #
+        # becomes:
+        #
+        #     frequency = "two times daily"
+        #
+        # rather than merely:
+        #
+        #     frequency = "daily"
+        #
+        # -----------------------------------------------------------------
 
         for match in FREQUENCY_RE.finditer(sentence):
-            value = _normalise_space(
-                match.group(0).lower()
-            )
+            value = _normalise_frequency(match.group(0))
 
             facts.append(
                 ClinicalFact(
@@ -516,30 +568,26 @@ def extract_facts(
                 )
             )
 
-        # =====================================================================
-        # LATERALITY
-        # =====================================================================
+        # -----------------------------------------------------------------
+        # Laterality
+        # -----------------------------------------------------------------
 
         for match in LATERALITY_RE.finditer(sentence):
-            value = match.group(0).lower()
-
             facts.append(
                 ClinicalFact(
                     category="laterality",
-                    value=value,
+                    value=_normalise_laterality(match.group(0)),
                     evidence=sentence,
                 )
             )
 
-    # =========================================================================
-    # DEDUPLICATION
-    # =========================================================================
-
-    # Deduplicate exact category/value/evidence triples while preserving order.
+    # ---------------------------------------------------------------------
+    # Deduplicate
+    # ---------------------------------------------------------------------
     #
-    # Importantly, evidence is included in the key. The same clinical fact
-    # appearing in two different source sentences remains traceable to both
-    # locations rather than being silently collapsed across the document.
+    # Preserve insertion order while removing exact duplicate
+    # category/value/evidence triples.
+    # ---------------------------------------------------------------------
 
     seen = set()
     deduped: List[ClinicalFact] = []
@@ -555,8 +603,6 @@ def extract_facts(
             continue
 
         seen.add(key)
-        deduped.append(
-            fact
-        )
+        deduped.append(fact)
 
     return deduped

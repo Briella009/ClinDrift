@@ -1,30 +1,30 @@
+"""
+ClinDrift semantic drift engine.
+
+Compares clinical facts extracted from source and transformed text and
+identifies potentially safety-relevant changes.
+
+ClinDrift is a research prototype. Findings are indicators for human
+review and are not clinical diagnoses or medical-device outputs.
+"""
+
 from __future__ import annotations
 
 import re
 from dataclasses import asdict, dataclass
-from typing import Dict, Iterable, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 from rapidfuzz.fuzz import ratio
 
 from .extractor import ClinicalFact
 
 
-# =============================================================================
-# DATA MODEL
-# =============================================================================
+# ---------------------------------------------------------------------------
+# Finding model
+# ---------------------------------------------------------------------------
 
-
-@dataclass(frozen=True)
+@dataclass
 class DriftFinding:
-    """
-    Represents one clinically relevant information-integrity difference between
-    a source record and a transformed/AI-generated record.
-
-    ClinDrift is an assurance prototype. A finding does not establish clinical
-    correctness or incorrectness; it identifies a difference that may require
-    human review.
-    """
-
     drift_type: str
     severity: str
     source_value: str
@@ -37,10 +37,9 @@ class DriftFinding:
         return asdict(self)
 
 
-# =============================================================================
-# CONFIGURATION
-# =============================================================================
-
+# ---------------------------------------------------------------------------
+# Severity model
+# ---------------------------------------------------------------------------
 
 CRITICAL_CATEGORIES = {
     "allergy",
@@ -56,12 +55,6 @@ HIGH_CATEGORIES = {
     "duration",
 }
 
-MEDIUM_CATEGORIES = {
-    "condition",
-    "symptom",
-    "procedure",
-}
-
 DIRECT_COMPARE_CATEGORIES = {
     "dosage",
     "duration",
@@ -70,15 +63,22 @@ DIRECT_COMPARE_CATEGORIES = {
     "measurement",
 }
 
-PLACEHOLDER = "—"
 
-FUZZY_MATCH_THRESHOLD = 70.0
+def _severity(category: str) -> str:
+    category = category.lower().strip()
+
+    if category in CRITICAL_CATEGORIES:
+        return "Critical"
+
+    if category in HIGH_CATEGORIES:
+        return "High"
+
+    return "Medium"
 
 
-# =============================================================================
-# NUMBER AND UNIT NORMALISATION
-# =============================================================================
-
+# ---------------------------------------------------------------------------
+# General normalisation
+# ---------------------------------------------------------------------------
 
 NUMBER_WORDS = {
     "zero": 0,
@@ -94,54 +94,98 @@ NUMBER_WORDS = {
     "ten": 10,
     "eleven": 11,
     "twelve": 12,
-    "thirteen": 13,
-    "fourteen": 14,
-    "fifteen": 15,
-    "sixteen": 16,
-    "seventeen": 17,
-    "eighteen": 18,
-    "nineteen": 19,
-    "twenty": 20,
-    "thirty": 30,
-    "forty": 40,
-    "fifty": 50,
-    "sixty": 60,
-    "seventy": 70,
-    "eighty": 80,
-    "ninety": 90,
 }
 
 
+def _normalise_space(value: str) -> str:
+    return re.sub(r"\s+", " ", value.strip().lower())
+
+
+def _number_value(value: str) -> Optional[float]:
+    value = value.strip().lower()
+
+    if value in NUMBER_WORDS:
+        return float(NUMBER_WORDS[value])
+
+    try:
+        return float(value)
+    except ValueError:
+        return None
+
+
+def _format_number(value: float) -> str:
+    if float(value).is_integer():
+        return str(int(value))
+
+    return str(round(value, 6)).rstrip("0").rstrip(".")
+
+
+# ---------------------------------------------------------------------------
+# Dosage normalisation
+# ---------------------------------------------------------------------------
+
 DOSAGE_RE = re.compile(
     r"\b(?P<number>\d+(?:\.\d+)?)\s*"
-    r"(?P<unit>mg|mcg|g|kg|ml|l|units?)\b",
-    re.IGNORECASE,
+    r"(?P<unit>mcg|mg|g|ml|unit|units)\b",
+    re.I,
 )
+
+DOSAGE_FACTORS_TO_MG = {
+    "mcg": 0.001,
+    "mg": 1.0,
+    "g": 1000.0,
+}
+
+
+def _canonical_dosage(value: str) -> str:
+    normalised = _normalise_space(value)
+    match = DOSAGE_RE.search(normalised)
+
+    if not match:
+        return normalised.replace(" ", "")
+
+    number = float(match.group("number"))
+    unit = match.group("unit").lower()
+
+    # Mass doses can safely be represented using a common comparison unit.
+    if unit in DOSAGE_FACTORS_TO_MG:
+        mg_value = number * DOSAGE_FACTORS_TO_MG[unit]
+        return f"{_format_number(mg_value)}mg"
+
+    if unit in {"unit", "units"}:
+        return f"{_format_number(number)}units"
+
+    if unit == "ml":
+        return f"{_format_number(number)}ml"
+
+    return normalised.replace(" ", "")
+
+
+# ---------------------------------------------------------------------------
+# Measurement normalisation
+# ---------------------------------------------------------------------------
 
 BP_RE = re.compile(
     r"\b(?P<systolic>\d{2,3})\s*/\s*(?P<diastolic>\d{2,3})\b"
 )
 
-DURATION_RE = re.compile(
-    r"\b(?P<number>\d+|[a-zA-Z]+)\s+"
-    r"(?P<unit>hours?|days?|weeks?|months?|years?)\b",
-    re.IGNORECASE,
-)
 
-FREQUENCY_PATTERNS: Sequence[Tuple[re.Pattern[str], str]] = (
-    (re.compile(r"\bonce\s+(?:a|per)\s+day\b", re.I), "1/day"),
-    (re.compile(r"\bonce\s+daily\b", re.I), "1/day"),
-    (re.compile(r"\btwice\s+(?:a|per)\s+day\b", re.I), "2/day"),
-    (re.compile(r"\btwice\s+daily\b", re.I), "2/day"),
-    (re.compile(r"\bthree\s+times\s+(?:a|per)\s+day\b", re.I), "3/day"),
-    (re.compile(r"\bthree\s+times\s+daily\b", re.I), "3/day"),
-    (re.compile(r"\bfour\s+times\s+(?:a|per)\s+day\b", re.I), "4/day"),
-    (re.compile(r"\bfour\s+times\s+daily\b", re.I), "4/day"),
-    (re.compile(r"\bdaily\b", re.I), "1/day"),
-    (re.compile(r"\bevery\s+day\b", re.I), "1/day"),
-    (re.compile(r"\bnightly\b", re.I), "1/night"),
-    (re.compile(r"\bweekly\b", re.I), "1/week"),
-)
+def _canonical_measurement(value: str) -> str:
+    normalised = _normalise_space(value)
+    match = BP_RE.search(normalised)
+
+    if match:
+        return (
+            f"{int(match.group('systolic'))}/"
+            f"{int(match.group('diastolic'))}"
+        )
+
+    return normalised.replace(" ", "")
+
+
+# ---------------------------------------------------------------------------
+# Laterality normalisation
+# ---------------------------------------------------------------------------
 
 LATERALITY_MAP = {
     "left": "left",
@@ -151,366 +195,308 @@ LATERALITY_MAP = {
     "both sides": "bilateral",
 }
 
-UNIT_ALIASES = {
-    "unit": "unit",
-    "units": "unit",
-    "milligram": "mg",
-    "milligrams": "mg",
-    "microgram": "mcg",
-    "micrograms": "mcg",
-    "millilitre": "ml",
-    "millilitres": "ml",
-    "milliliter": "ml",
-    "milliliters": "ml",
+
+def _canonical_laterality(value: str) -> str:
+    normalised = _normalise_space(value)
+    return LATERALITY_MAP.get(normalised, normalised)
+
+
+# ---------------------------------------------------------------------------
+# Duration normalisation
+# ---------------------------------------------------------------------------
+
+DURATION_RE = re.compile(
+    r"\b(?P<number>"
+    r"\d+(?:\.\d+)?|"
+    r"zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve"
+    r")\s+"
+    r"(?P<unit>hours?|days?|weeks?|months?|years?)\b",
+    re.I,
+)
+
+# Hours provide a deterministic comparison representation.
+#
+# Month/year conversions are intentionally approximate. ClinDrift uses these
+# only for semantic-equivalence comparison in this research prototype.
+DURATION_TO_HOURS = {
+    "hour": 1.0,
+    "hours": 1.0,
+    "day": 24.0,
+    "days": 24.0,
+    "week": 168.0,
+    "weeks": 168.0,
+    "month": 730.0,
+    "months": 730.0,
+    "year": 8760.0,
+    "years": 8760.0,
 }
 
 
-# =============================================================================
-# BASIC HELPERS
-# =============================================================================
-
-
-def _clean_text(value: Optional[str]) -> str:
-    if value is None:
-        return ""
-
-    value = str(value).strip().lower()
-
-    value = (
-        value.replace("–", "-")
-        .replace("—", "-")
-        .replace("’", "'")
-        .replace("“", '"')
-        .replace("”", '"')
-    )
-
-    value = re.sub(r"\s+", " ", value)
-
-    return value.strip()
-
-
-def _parse_number(value: str) -> Optional[float]:
-    value = _clean_text(value)
-
-    try:
-        return float(value)
-    except ValueError:
-        pass
-
-    if value in NUMBER_WORDS:
-        return float(NUMBER_WORDS[value])
-
-    parts = value.replace("-", " ").split()
-
-    if not parts:
-        return None
-
-    total = 0
-
-    for part in parts:
-        if part not in NUMBER_WORDS:
-            return None
-        total += NUMBER_WORDS[part]
-
-    return float(total)
-
-
-def _format_number(value: float) -> str:
-    if value.is_integer():
-        return str(int(value))
-    return str(round(value, 6)).rstrip("0").rstrip(".")
-
-
-# =============================================================================
-# CATEGORY-SPECIFIC NORMALISATION
-# =============================================================================
-
-
-def _normalise_dosage(value: str) -> str:
-    value = _clean_text(value)
-
-    match = DOSAGE_RE.search(value)
+def _canonical_duration(value: str) -> str:
+    normalised = _normalise_space(value)
+    match = DURATION_RE.search(normalised)
 
     if not match:
-        return value.replace(" ", "")
+        return normalised
 
-    amount = float(match.group("number"))
-    unit = _clean_text(match.group("unit"))
+    number = _number_value(match.group("number"))
 
-    unit = UNIT_ALIASES.get(unit, unit)
+    if number is None:
+        return normalised
 
-    # Convert common mass units to mg for stable comparison.
-    if unit == "g":
-        amount *= 1000.0
-        unit = "mg"
+    unit = match.group("unit").lower()
+    factor = DURATION_TO_HOURS.get(unit)
 
-    elif unit == "mcg":
-        amount /= 1000.0
-        unit = "mg"
+    if factor is None:
+        return normalised
 
-    return f"{_format_number(amount)}{unit}"
+    hours = number * factor
 
-
-def _normalise_measurement(value: str) -> str:
-    value = _clean_text(value)
-
-    match = BP_RE.search(value)
-
-    if match:
-        systolic = int(match.group("systolic"))
-        diastolic = int(match.group("diastolic"))
-        return f"{systolic}/{diastolic}"
-
-    return value.replace(" ", "")
+    return f"{_format_number(hours)}h"
 
 
-def _normalise_duration(value: str) -> str:
-    """
-    Convert durations to a comparable canonical representation.
+# ---------------------------------------------------------------------------
+# Frequency normalisation
+# ---------------------------------------------------------------------------
 
-    Examples:
-        7 days      -> 168h
-        one week    -> 168h
-        3 days      -> 72h
-        three days  -> 72h
-        24 hours    -> 24h
+FREQUENCY_ALIASES = {
+    # Once daily
+    "once a day": "1/day",
+    "once per day": "1/day",
+    "once daily": "1/day",
+    "one time a day": "1/day",
+    "one time per day": "1/day",
+    "one time daily": "1/day",
+    "daily": "1/day",
 
-    Months and years use conventional approximate values for comparison within
-    this prototype and should not be interpreted as clinical interval
-    arithmetic.
-    """
+    # Twice daily
+    "twice a day": "2/day",
+    "twice per day": "2/day",
+    "twice daily": "2/day",
+    "two times a day": "2/day",
+    "two times per day": "2/day",
+    "two times daily": "2/day",
 
-    value = _clean_text(value)
+    # Three times daily
+    "three times a day": "3/day",
+    "three times per day": "3/day",
+    "three times daily": "3/day",
 
-    match = DURATION_RE.search(value)
+    # Four times daily
+    "four times a day": "4/day",
+    "four times per day": "4/day",
+    "four times daily": "4/day",
 
-    if not match:
-        return value
+    # Weekly
+    "once a week": "1/week",
+    "once per week": "1/week",
+    "once weekly": "1/week",
+    "weekly": "1/week",
 
-    amount = _parse_number(match.group("number"))
+    # Common day-part expressions.
+    "nightly": "1/night",
+    "every night": "1/night",
+    "morning": "1/morning",
+    "every morning": "1/morning",
+    "evening": "1/evening",
+    "every evening": "1/evening",
+}
 
-    if amount is None:
-        return value
 
-    unit = match.group("unit").lower().rstrip("s")
+FREQUENCY_PATTERN = re.compile(
+    r"\b(?P<count>"
+    r"once|twice|"
+    r"one|two|three|four|five|six|seven|eight|nine|ten|"
+    r"\d+"
+    r")"
+    r"(?:\s+times?)?"
+    r"\s+(?:a|per)?\s*"
+    r"(?P<period>day|week|month)\b",
+    re.I,
+)
 
-    hours_per_unit = {
-        "hour": 1.0,
-        "day": 24.0,
-        "week": 24.0 * 7.0,
-        "month": 24.0 * 30.0,
-        "year": 24.0 * 365.0,
+
+def _frequency_count(value: str) -> Optional[int]:
+    value = value.lower()
+
+    special = {
+        "once": 1,
+        "twice": 2,
     }
 
-    multiplier = hours_per_unit.get(unit)
+    if value in special:
+        return special[value]
 
-    if multiplier is None:
-        return value
+    number = _number_value(value)
 
-    total_hours = amount * multiplier
+    if number is None:
+        return None
 
-    return f"{_format_number(total_hours)}h"
+    if not float(number).is_integer():
+        return None
 
-
-def _normalise_frequency_from_text(text: str) -> Optional[str]:
-    text = _clean_text(text)
-
-    # More specific expressions are intentionally evaluated before "daily".
-    for pattern, canonical in FREQUENCY_PATTERNS:
-        if pattern.search(text):
-            return canonical
-
-    return None
+    return int(number)
 
 
-def _normalise_frequency(
-    value: str,
-    evidence: Optional[str] = None,
-) -> str:
-    """
-    Frequency normalisation uses both the extracted value and evidence.
+def _canonical_frequency(value: str) -> str:
+    normalised = _normalise_space(value)
 
-    The evidence fallback matters because a simple extractor may extract
-    'daily' from 'twice daily'. Examining the complete sentence prevents the
-    phrase from being incorrectly reduced to once daily.
-    """
+    # Remove punctuation that should not affect meaning.
+    normalised = normalised.strip(" .,:;")
 
-    if evidence:
-        evidence_result = _normalise_frequency_from_text(evidence)
-        if evidence_result:
-            return evidence_result
+    if normalised in FREQUENCY_ALIASES:
+        return FREQUENCY_ALIASES[normalised]
 
-    value_result = _normalise_frequency_from_text(value)
+    # Handle expressions such as "two times daily".
+    daily_match = re.fullmatch(
+        r"(?P<count>"
+        r"once|twice|one|two|three|four|five|six|seven|eight|nine|ten|\d+"
+        r")"
+        r"(?:\s+times?)?\s+daily",
+        normalised,
+        re.I,
+    )
 
-    if value_result:
-        return value_result
+    if daily_match:
+        count = _frequency_count(daily_match.group("count"))
 
-    return _clean_text(value)
+        if count is not None:
+            return f"{count}/day"
 
+    weekly_match = re.fullmatch(
+        r"(?P<count>"
+        r"once|twice|one|two|three|four|five|six|seven|eight|nine|ten|\d+"
+        r")"
+        r"(?:\s+times?)?\s+weekly",
+        normalised,
+        re.I,
+    )
 
-def _normalise_laterality(value: str) -> str:
-    value = _clean_text(value)
-    return LATERALITY_MAP.get(value, value)
+    if weekly_match:
+        count = _frequency_count(weekly_match.group("count"))
 
+        if count is not None:
+            return f"{count}/week"
 
-def _normalise_allergy(value: str) -> str:
-    value = _clean_text(value)
+    match = FREQUENCY_PATTERN.fullmatch(normalised)
 
-    value = re.sub(r"\ballergy\b", "", value)
-    value = re.sub(r"\ballergic\s+to\b", "", value)
+    if match:
+        count = _frequency_count(match.group("count"))
 
-    return value.strip(" .,:;")
+        if count is not None:
+            period = match.group("period").lower()
+            return f"{count}/{period}"
 
-
-def _normalise_medication(value: str) -> str:
-    value = _clean_text(value)
-
-    # Remove punctuation while preserving medication names containing hyphens.
-    value = re.sub(r"[^\w\s-]", "", value)
-
-    return value.strip()
-
-
-def _normalise_negation(value: str) -> str:
-    value = _clean_text(value)
-
-    if re.search(r"\bno known (?:drug )?allerg(?:y|ies)\b", value):
-        return "no-known-allergies"
-
-    return value
+    return normalised
 
 
-def _normalise_fact_value(fact: ClinicalFact) -> str:
-    category = _clean_text(fact.category)
-    value = fact.value
+# ---------------------------------------------------------------------------
+# Category-aware canonicalisation
+# ---------------------------------------------------------------------------
+
+def _canonical_value(category: str, value: str) -> str:
+    category = category.lower().strip()
 
     if category == "dosage":
-        return _normalise_dosage(value)
+        return _canonical_dosage(value)
 
     if category == "measurement":
-        return _normalise_measurement(value)
+        return _canonical_measurement(value)
 
     if category == "duration":
-        return _normalise_duration(value)
+        return _canonical_duration(value)
 
     if category == "frequency":
-        return _normalise_frequency(value, fact.evidence)
+        return _canonical_frequency(value)
 
     if category == "laterality":
-        return _normalise_laterality(value)
+        return _canonical_laterality(value)
 
-    if category == "allergy":
-        return _normalise_allergy(value)
-
-    if category == "medication":
-        return _normalise_medication(value)
-
-    if category == "negation":
-        return _normalise_negation(value)
-
-    return _clean_text(value)
+    return _normalise_space(value)
 
 
-# =============================================================================
-# SEVERITY
-# =============================================================================
+def _equivalent(category: str, first: str, second: str) -> bool:
+    return _canonical_value(category, first) == _canonical_value(
+        category,
+        second,
+    )
 
 
-def _severity(category: str) -> str:
-    category = _clean_text(category)
-
-    if category in CRITICAL_CATEGORIES:
-        return "Critical"
-
-    if category in HIGH_CATEGORIES:
-        return "High"
-
-    if category in MEDIUM_CATEGORIES:
-        return "Medium"
-
-    return "Medium"
-
-
-# =============================================================================
-# FACT COLLECTION HELPERS
-# =============================================================================
-
+# ---------------------------------------------------------------------------
+# Fact grouping and matching
+# ---------------------------------------------------------------------------
 
 def _group(
-    facts: Iterable[ClinicalFact],
+    facts: Sequence[ClinicalFact],
 ) -> Dict[str, List[ClinicalFact]]:
     grouped: Dict[str, List[ClinicalFact]] = {}
 
     for fact in facts:
-        category = _clean_text(fact.category)
-        grouped.setdefault(category, []).append(fact)
+        grouped.setdefault(fact.category, []).append(fact)
 
     return grouped
 
 
-def _fact_similarity(
-    source_fact: ClinicalFact,
-    transformed_fact: ClinicalFact,
+def _similarity(
+    category: str,
+    first: str,
+    second: str,
 ) -> float:
-    """
-    Compare facts after category-aware normalisation.
-    """
+    first_canonical = _canonical_value(category, first)
+    second_canonical = _canonical_value(category, second)
 
-    if _clean_text(source_fact.category) != _clean_text(transformed_fact.category):
-        return 0.0
-
-    source_normalised = _normalise_fact_value(source_fact)
-    transformed_normalised = _normalise_fact_value(transformed_fact)
-
-    if source_normalised == transformed_normalised:
+    if first_canonical == second_canonical:
         return 100.0
 
-    return float(
-        ratio(
-            source_normalised,
-            transformed_normalised,
-        )
+    return float(ratio(first_canonical, second_canonical))
+
+
+def _best_similarity(
+    category: str,
+    value: str,
+    candidates: Sequence[ClinicalFact],
+) -> float:
+    if not candidates:
+        return 0.0
+
+    return max(
+        _similarity(category, value, candidate.value)
+        for candidate in candidates
     )
 
 
 def _best_match(
+    category: str,
     fact: ClinicalFact,
     candidates: Sequence[ClinicalFact],
 ) -> Tuple[Optional[ClinicalFact], float]:
     if not candidates:
         return None, 0.0
 
-    ranked = [
-        (candidate, _fact_similarity(fact, candidate))
-        for candidate in candidates
-    ]
-
-    ranked.sort(
-        key=lambda item: item[1],
+    ranked = sorted(
+        candidates,
+        key=lambda candidate: _similarity(
+            category,
+            fact.value,
+            candidate.value,
+        ),
         reverse=True,
     )
 
-    return ranked[0]
+    best = ranked[0]
 
-
-def _equivalent(
-    source_fact: ClinicalFact,
-    transformed_fact: ClinicalFact,
-) -> bool:
     return (
-        _normalise_fact_value(source_fact)
-        == _normalise_fact_value(transformed_fact)
+        best,
+        _similarity(category, fact.value, best.value),
     )
 
 
-# =============================================================================
-# FINDING HELPERS
-# =============================================================================
+# ---------------------------------------------------------------------------
+# Finding creation
+# ---------------------------------------------------------------------------
 
-
-def _add_finding(
+def _add(
     findings: List[DriftFinding],
-    *,
     drift_type: str,
     category: str,
     source_value: str,
@@ -533,133 +519,98 @@ def _add_finding(
     )
 
 
-def _finding_key(
-    finding: DriftFinding,
-) -> Tuple[str, str, str, str, str]:
+# ---------------------------------------------------------------------------
+# Allergy contradiction handling
+# ---------------------------------------------------------------------------
+
+def _is_no_known_allergy(fact: ClinicalFact) -> bool:
+    value = _normalise_space(fact.value)
+
     return (
-        _clean_text(finding.drift_type),
-        _clean_text(finding.source_value),
-        _clean_text(finding.transformed_value),
-        _clean_text(finding.source_evidence),
-        _clean_text(finding.transformed_evidence),
-    )
-
-
-def _deduplicate_findings(
-    findings: Iterable[DriftFinding],
-) -> List[DriftFinding]:
-    seen = set()
-    unique: List[DriftFinding] = []
-
-    for finding in findings:
-        key = _finding_key(finding)
-
-        if key in seen:
-            continue
-
-        seen.add(key)
-        unique.append(finding)
-
-    return unique
-
-
-# =============================================================================
-# ALLERGY CONTRADICTION
-# =============================================================================
-
-
-def _is_no_known_allergies(fact: ClinicalFact) -> bool:
-    if _clean_text(fact.category) != "negation":
-        return False
-
-    combined = f"{fact.value} {fact.evidence}".lower()
-
-    return bool(
-        re.search(
-            r"\bno known (?:drug )?allerg(?:y|ies)\b",
-            combined,
-            re.IGNORECASE,
+        "allerg" in value
+        and (
+            "no known" in value
+            or "no drug" in value
+            or "without known" in value
         )
     )
 
 
-def _detect_allergy_contradictions(
-    source_group: Dict[str, List[ClinicalFact]],
-    transformed_group: Dict[str, List[ClinicalFact]],
+def _handle_allergy_contradictions(
     findings: List[DriftFinding],
-) -> Tuple[set[int], set[int], set[int], set[int]]:
-    source_allergies = source_group.get("allergy", [])
-    transformed_allergies = transformed_group.get("allergy", [])
+    sgroup: Dict[str, List[ClinicalFact]],
+    tgroup: Dict[str, List[ClinicalFact]],
+):
+    s_allergies = sgroup.get("allergy", [])
+    t_allergies = tgroup.get("allergy", [])
 
-    source_negations = source_group.get("negation", [])
-    transformed_negations = transformed_group.get("negation", [])
+    s_negations = sgroup.get("negation", [])
+    t_negations = tgroup.get("negation", [])
 
-    handled_source_allergies: set[int] = set()
-    handled_transformed_allergies: set[int] = set()
-    handled_source_negations: set[int] = set()
-    handled_transformed_negations: set[int] = set()
-
-    transformed_no_allergy = next(
+    s_no_allergy = next(
         (
             fact
-            for fact in transformed_negations
-            if _is_no_known_allergies(fact)
+            for fact in s_negations
+            if _is_no_known_allergy(fact)
         ),
         None,
     )
 
-    source_no_allergy = next(
+    t_no_allergy = next(
         (
             fact
-            for fact in source_negations
-            if _is_no_known_allergies(fact)
+            for fact in t_negations
+            if _is_no_known_allergy(fact)
         ),
         None,
     )
 
-    # Source states an allergy, transformed text says there are none.
-    if source_allergies and transformed_no_allergy:
-        for source_fact in source_allergies:
-            _add_finding(
-                findings,
+    handled_source_allergies = set()
+    handled_transformed_allergies = set()
+    handled_source_negations = set()
+    handled_transformed_negations = set()
+
+    if s_allergies and t_no_allergy:
+        for source_fact in s_allergies:
+            _add(
+                findings=findings,
                 drift_type="Allergy contradiction",
                 category="allergy",
                 source_value=source_fact.value,
-                transformed_value=transformed_no_allergy.value,
+                transformed_value=t_no_allergy.value,
                 source_evidence=source_fact.evidence,
-                transformed_evidence=transformed_no_allergy.evidence,
+                transformed_evidence=t_no_allergy.evidence,
                 rationale=(
-                    "A documented allergy was transformed into a statement "
-                    "indicating no known allergies."
+                    "A documented allergy was transformed into a "
+                    "statement indicating no known allergies."
                 ),
                 severity="Critical",
             )
 
             handled_source_allergies.add(id(source_fact))
 
-        handled_transformed_negations.add(id(transformed_no_allergy))
+        handled_transformed_negations.add(id(t_no_allergy))
 
-    # Source says no known allergies, transformed text introduces one.
-    if source_no_allergy and transformed_allergies:
-        for transformed_fact in transformed_allergies:
-            _add_finding(
-                findings,
+    if s_no_allergy and t_allergies:
+        for transformed_fact in t_allergies:
+            _add(
+                findings=findings,
                 drift_type="Allergy contradiction",
                 category="allergy",
-                source_value=source_no_allergy.value,
+                source_value=s_no_allergy.value,
                 transformed_value=transformed_fact.value,
-                source_evidence=source_no_allergy.evidence,
+                source_evidence=s_no_allergy.evidence,
                 transformed_evidence=transformed_fact.evidence,
                 rationale=(
-                    "The source states that there are no known allergies, "
-                    "but the transformed record introduces an allergy."
+                    "The source indicates no known allergies, but the "
+                    "transformed text introduces an allergy."
                 ),
                 severity="Critical",
             )
 
             handled_transformed_allergies.add(id(transformed_fact))
 
-        handled_source_negations.add(id(source_no_allergy))
+        handled_source_negations.add(id(s_no_allergy))
 
     return (
         handled_source_allergies,
@@ -669,278 +620,239 @@ def _detect_allergy_contradictions(
     )
 
 
-# =============================================================================
-# DIRECT FIELD COMPARISON
-# =============================================================================
-
-
-def _compare_direct_category(
-    category: str,
-    source_items: Sequence[ClinicalFact],
-    transformed_items: Sequence[ClinicalFact],
-    findings: List[DriftFinding],
-) -> bool:
-    """
-    Compare categories such as dosage, duration, frequency, laterality and
-    measurement.
-
-    Returns True when the category has been completely handled here.
-    """
-
-    if category not in DIRECT_COMPARE_CATEGORIES:
-        return False
-
-    if len(source_items) != 1 or len(transformed_items) != 1:
-        return False
-
-    source_fact = source_items[0]
-    transformed_fact = transformed_items[0]
-
-    if _equivalent(source_fact, transformed_fact):
-        return True
-
-    label_map = {
-        "dosage": "Dosage drift",
-        "duration": "Duration drift",
-        "frequency": "Frequency drift",
-        "laterality": "Laterality drift",
-        "measurement": "Measurement drift",
-    }
-
-    _add_finding(
-        findings,
-        drift_type=label_map.get(
-            category,
-            f"{category.title()} drift",
-        ),
-        category=category,
-        source_value=source_fact.value,
-        transformed_value=transformed_fact.value,
-        source_evidence=source_fact.evidence,
-        transformed_evidence=transformed_fact.evidence,
-        rationale=(
-            f"The {category} value changed during transformation."
-        ),
-    )
-
-    return True
-
-
-# =============================================================================
-# GENERAL CATEGORY COMPARISON
-# =============================================================================
-
-
-def _compare_general_category(
-    category: str,
-    source_items: Sequence[ClinicalFact],
-    transformed_items: Sequence[ClinicalFact],
-    findings: List[DriftFinding],
-) -> None:
-    """
-    Match source and transformed facts using normalised semantic values.
-
-    Unmatched source facts become omission candidates.
-    Unmatched transformed facts become unsupported-addition candidates.
-    Materially changed matched values become drift candidates.
-    """
-
-    unmatched_transformed = list(transformed_items)
-
-    for source_fact in source_items:
-        best_fact, similarity = _best_match(
-            source_fact,
-            unmatched_transformed,
-        )
-
-        if best_fact is None:
-            _add_finding(
-                findings,
-                drift_type="Omission",
-                category=category,
-                source_value=source_fact.value,
-                transformed_value=PLACEHOLDER,
-                source_evidence=source_fact.evidence,
-                transformed_evidence=PLACEHOLDER,
-                rationale=(
-                    f"Source {category} fact is not preserved "
-                    f"in the transformed text."
-                ),
-            )
-            continue
-
-        # Exact canonical equivalence.
-        if _equivalent(source_fact, best_fact):
-            unmatched_transformed.remove(best_fact)
-            continue
-
-        # Materially similar facts in the same category are treated as a
-        # changed value rather than as separate omission/addition findings.
-        if similarity >= FUZZY_MATCH_THRESHOLD:
-            _add_finding(
-                findings,
-                drift_type=f"{category.title()} drift",
-                category=category,
-                source_value=source_fact.value,
-                transformed_value=best_fact.value,
-                source_evidence=source_fact.evidence,
-                transformed_evidence=best_fact.evidence,
-                rationale=(
-                    f"The {category} value changed during transformation."
-                ),
-            )
-
-            unmatched_transformed.remove(best_fact)
-            continue
-
-        # Poor match: the source fact appears to be missing.
-        _add_finding(
-            findings,
-            drift_type="Omission",
-            category=category,
-            source_value=source_fact.value,
-            transformed_value=PLACEHOLDER,
-            source_evidence=source_fact.evidence,
-            transformed_evidence=PLACEHOLDER,
-            rationale=(
-                f"Source {category} fact is not preserved "
-                f"in the transformed text."
-            ),
-        )
-
-    # Anything left on the transformed side was not supported by source facts.
-    for transformed_fact in unmatched_transformed:
-        _add_finding(
-            findings,
-            drift_type="Unsupported addition",
-            category=category,
-            source_value=PLACEHOLDER,
-            transformed_value=transformed_fact.value,
-            source_evidence=PLACEHOLDER,
-            transformed_evidence=transformed_fact.evidence,
-            rationale=(
-                f"The transformed text introduces a {category} fact "
-                f"that was not identified in the source record."
-            ),
-        )
-
-
-# =============================================================================
-# PUBLIC COMPARISON FUNCTION
-# =============================================================================
-
+# ---------------------------------------------------------------------------
+# Main comparison engine
+# ---------------------------------------------------------------------------
 
 def compare_facts(
     source: List[ClinicalFact],
     transformed: List[ClinicalFact],
 ) -> List[DriftFinding]:
     """
-    Compare extracted clinical facts from a source record and a transformed
-    record.
+    Compare clinical facts extracted from source and transformed text.
 
-    The comparison is intentionally conservative and evidence-oriented.
+    The comparison distinguishes between:
 
-    It supports:
+    * preserved facts
+    * semantically equivalent representations
+    * value drift
+    * omissions
+    * unsupported additions
+    * explicit allergy contradictions
 
-    - allergy contradictions
-    - dosage drift
-    - duration drift
-    - semantic duration equivalence
-    - frequency drift
-    - semantic frequency equivalence
-    - measurement drift
-    - laterality drift
-    - omissions
-    - unsupported additions
-    - medication drift
-    - negation-related differences
-    - claim-level evidence traceability
-
-    Important:
-        A zero-finding result means only that the implemented rules did not
-        identify a supported difference. It is not evidence of clinical
-        correctness or safety.
+    Exact clinical correctness is not inferred. Findings indicate
+    differences requiring review.
     """
 
     findings: List[DriftFinding] = []
 
-    source_group = _group(source)
-    transformed_group = _group(transformed)
+    sgroup = _group(source)
+    tgroup = _group(transformed)
 
     (
         handled_source_allergies,
         handled_transformed_allergies,
         handled_source_negations,
         handled_transformed_negations,
-    ) = _detect_allergy_contradictions(
-        source_group,
-        transformed_group,
+    ) = _handle_allergy_contradictions(
         findings,
+        sgroup,
+        tgroup,
     )
 
-    categories = sorted(
-        set(source_group.keys())
-        | set(transformed_group.keys())
-    )
+    categories = sorted(set(sgroup) | set(tgroup))
 
     for category in categories:
-        source_items = list(
-            source_group.get(category, [])
-        )
+        sitems = list(sgroup.get(category, []))
+        titems = list(tgroup.get(category, []))
 
-        transformed_items = list(
-            transformed_group.get(category, [])
-        )
-
-        # Prevent allergy contradictions from also appearing as generic
-        # omissions/additions.
+        # Remove allergy/negation facts already consumed by explicit
+        # contradiction handling.
         if category == "allergy":
-            source_items = [
-                item
-                for item in source_items
-                if id(item) not in handled_source_allergies
+            sitems = [
+                fact
+                for fact in sitems
+                if id(fact) not in handled_source_allergies
             ]
 
-            transformed_items = [
-                item
-                for item in transformed_items
-                if id(item) not in handled_transformed_allergies
+            titems = [
+                fact
+                for fact in titems
+                if id(fact) not in handled_transformed_allergies
             ]
 
-        if category == "negation":
-            source_items = [
-                item
-                for item in source_items
-                if id(item) not in handled_source_negations
+        elif category == "negation":
+            sitems = [
+                fact
+                for fact in sitems
+                if id(fact) not in handled_source_negations
             ]
 
-            transformed_items = [
-                item
-                for item in transformed_items
-                if id(item) not in handled_transformed_negations
+            titems = [
+                fact
+                for fact in titems
+                if id(fact) not in handled_transformed_negations
             ]
 
-        # Nothing remains to compare.
-        if not source_items and not transformed_items:
+        # ---------------------------------------------------------------
+        # Direct comparison
+        # ---------------------------------------------------------------
+        #
+        # When exactly one value exists on each side for a structured
+        # category, compare canonical semantic representations first.
+        #
+        # Examples:
+        #
+        #   500 mg        == 500mg
+        #   7 days        == one week
+        #   twice a day   == two times daily
+        #   122 / 78      == 122/78
+        #
+        # Genuine changes remain detectable:
+        #
+        #   500mg         != 1000mg
+        #   twice a day   != once a day
+        #   left          != right
+        #
+        if (
+            category in DIRECT_COMPARE_CATEGORIES
+            and len(sitems) == 1
+            and len(titems) == 1
+        ):
+            source_fact = sitems[0]
+            transformed_fact = titems[0]
+
+            if not _equivalent(
+                category,
+                source_fact.value,
+                transformed_fact.value,
+            ):
+                _add(
+                    findings=findings,
+                    drift_type=f"{category.title()} drift",
+                    category=category,
+                    source_value=source_fact.value,
+                    transformed_value=transformed_fact.value,
+                    source_evidence=source_fact.evidence,
+                    transformed_evidence=transformed_fact.evidence,
+                    rationale=(
+                        f"The {category} value changed during "
+                        "transformation."
+                    ),
+                )
+
             continue
 
-        # Handle simple one-to-one structured clinical fields first.
-        handled = _compare_direct_category(
-            category,
-            source_items,
-            transformed_items,
-            findings,
+        # ---------------------------------------------------------------
+        # Source omissions
+        # ---------------------------------------------------------------
+
+        for source_fact in sitems:
+            similarity = _best_similarity(
+                category,
+                source_fact.value,
+                titems,
+            )
+
+            if not titems or similarity < 55:
+                _add(
+                    findings=findings,
+                    drift_type="Omission",
+                    category=category,
+                    source_value=source_fact.value,
+                    transformed_value="—",
+                    source_evidence=source_fact.evidence,
+                    transformed_evidence="—",
+                    rationale=(
+                        f"Source {category} fact is not preserved "
+                        "in the transformed text."
+                    ),
+                )
+
+        # ---------------------------------------------------------------
+        # Unsupported additions
+        # ---------------------------------------------------------------
+
+        for transformed_fact in titems:
+            similarity = _best_similarity(
+                category,
+                transformed_fact.value,
+                sitems,
+            )
+
+            if not sitems or similarity < 55:
+                _add(
+                    findings=findings,
+                    drift_type="Unsupported addition",
+                    category=category,
+                    source_value="—",
+                    transformed_value=transformed_fact.value,
+                    source_evidence="—",
+                    transformed_evidence=transformed_fact.evidence,
+                    rationale=(
+                        f"Transformed text introduces a {category} "
+                        "fact not found in the source."
+                    ),
+                )
+
+        # ---------------------------------------------------------------
+        # Material value changes
+        # ---------------------------------------------------------------
+
+        if sitems and titems:
+            for source_fact in sitems:
+                transformed_fact, similarity = _best_match(
+                    category,
+                    source_fact,
+                    titems,
+                )
+
+                if transformed_fact is None:
+                    continue
+
+                if _equivalent(
+                    category,
+                    source_fact.value,
+                    transformed_fact.value,
+                ):
+                    continue
+
+                if 55 <= similarity < 100:
+                    _add(
+                        findings=findings,
+                        drift_type=f"{category.title()} drift",
+                        category=category,
+                        source_value=source_fact.value,
+                        transformed_value=transformed_fact.value,
+                        source_evidence=source_fact.evidence,
+                        transformed_evidence=transformed_fact.evidence,
+                        rationale=(
+                            f"The {category} value changed during "
+                            "transformation."
+                        ),
+                    )
+
+    # -------------------------------------------------------------------
+    # Deduplicate findings
+    # -------------------------------------------------------------------
+
+    unique: List[DriftFinding] = []
+    seen = set()
+
+    for item in findings:
+        key = (
+            item.drift_type,
+            item.severity,
+            item.source_value,
+            item.transformed_value,
+            item.source_evidence,
+            item.transformed_evidence,
         )
 
-        if handled:
+        if key in seen:
             continue
 
-        # General fact matching handles omissions, additions and changes.
-        _compare_general_category(
-            category,
-            source_items,
-            transformed_items,
-            findings,
-        )
+        seen.add(key)
+        unique.append(item)
 
-    return _deduplicate_findings(findings)
+    return unique
