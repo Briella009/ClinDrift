@@ -2,9 +2,11 @@
 
 ## Scope
 
-This evaluation extends the original 12-scenario ClinDrift v0.1 baseline into a 140-case synthetic controlled benchmark designed for the ICAIAE 2026 paper. It is a research benchmark, not a clinical validation study.
+This evaluation extends the original 12-scenario ClinDrift v0.1 baseline into a 140-case synthetic controlled benchmark for the ICAIAE 2026 paper. It is a reproducible functional stress test, not a clinical validation study and not an independent external holdout dataset.
 
-The benchmark contains 100 positive drift cases and 40 negative controls across the following groups:
+The benchmark was designed after the v0.1 baseline had already identified important failure modes, especially paraphrase-related false positives and unsupported semantic content. The expanded benchmark therefore deliberately tests both implemented capabilities and known boundary conditions. Ground-truth labels are encoded independently of detector output for every case.
+
+The benchmark contains 100 positive drift cases and 40 negative controls:
 
 - dosage drift: 10
 - allergy contradiction: 10
@@ -13,7 +15,7 @@ The benchmark contains 100 positive drift cases and 40 negative controls across 
 - measurement drift: 10
 - laterality drift: 10
 - omission: 10
-- supported unsupported-addition cases: 10
+- supported transformed-only fact additions: 10
 - unsupported diagnosis challenge: 10
 - general semantic contradiction challenge: 10
 - unchanged controls: 10
@@ -21,13 +23,9 @@ The benchmark contains 100 positive drift cases and 40 negative controls across 
 - duration paraphrase controls: 10
 - frequency paraphrase controls: 10
 
-Ground truth was assigned before detector execution. Positive cases contain a deliberately introduced information-integrity error. Negative controls preserve the intended clinical meaning.
+## Why normalization was added
 
-## Why canonicalization was added
-
-The original baseline showed false positives for clinically equivalent forms such as `3 days` versus `three days` and `twice a day` versus `twice daily`.
-
-The ICAIAE evaluation branch therefore adds transparent canonicalization for a restricted set of equivalent duration and medication-frequency expressions. This is deliberately deterministic and inspectable.
+The original v0.1 baseline showed false positives for clinically equivalent surface forms such as `3 days` versus `three days` and `twice a day` versus `twice daily`. The ICAIAE evaluation branch therefore adds a restricted, inspectable normalization layer for duration and medication-frequency expressions and expands recognition of equivalent frequency forms.
 
 Examples include:
 
@@ -38,7 +36,9 @@ Examples include:
 - `once a week` -> `weekly`
 - `each night` -> `nightly`
 
-## Results
+The change remains deterministic. It does not introduce an LLM or a general semantic inference model into the ClinDrift detector.
+
+## Current-branch results
 
 ### Overall case-level performance
 
@@ -59,7 +59,7 @@ Examples include:
 
 ### Supported detector categories
 
-Across the 80 positive cases that fall inside the detector's implemented fact taxonomy, all 80 produced at least one finding in this controlled benchmark.
+Across the 80 positive cases that fall inside the detector's implemented fact taxonomy, all 80 produced at least one finding.
 
 | Supported group | Detection |
 |---|---:|
@@ -72,20 +72,20 @@ Across the 80 positive cases that fall inside the detector's implemented fact ta
 | Omission | 10/10 |
 | Supported transformed-only fact addition | 10/10 |
 
-The 30 benchmark cases labelled critical within the supported dosage, allergy and measurement groups were all flagged at case level.
+The 30 cases in the supported dosage, allergy and blood-pressure measurement groups, which the prototype severity scheme classifies as Critical, were all flagged at case level.
 
-These figures must not be interpreted as clinical sensitivity or medical-device performance. The cases are synthetic, deliberately constructed and aligned to the currently implemented taxonomy.
+These figures must not be interpreted as clinical sensitivity or medical-device performance. The cases are synthetic, deliberately constructed and substantially aligned with the implemented taxonomy.
 
 ### Challenge categories
 
-ClinDrift did not detect the 20 challenge cases that required reasoning outside the implemented fact ontology:
+ClinDrift did not detect the 20 challenge cases requiring reasoning outside its implemented fact ontology:
 
 | Challenge group | Detection |
 |---|---:|
 | Unsupported diagnosis statements | 0/10 |
 | General semantic contradictions | 0/10 |
 
-These failures are retained as part of the evaluation rather than being hidden. They show that the current deterministic extractor cannot verify arbitrary clinical assertions and should not be described as a comprehensive semantic verifier.
+These failures are retained as part of the evaluation. They show that the current deterministic extractor cannot verify arbitrary clinical assertions and should not be described as a comprehensive semantic verifier.
 
 ### Negative controls
 
@@ -96,21 +96,37 @@ These failures are retained as part of the evaluation rather than being hidden. 
 | Duration paraphrases | 0/10 |
 | Frequency paraphrases | 0/10 |
 
-Before the canonicalization change, the same 20 duration/frequency paraphrase controls produced 18 false-positive cases. After the restricted canonicalization layer was added, this fell to 0/20 on this benchmark.
+## Same-benchmark comparison with the v0.1 baseline logic
 
-This is evidence of a targeted improvement on the benchmark, not proof that paraphrase-related false positives are solved generally.
+The same 140 cases were also executed against a reconstruction of the pre-normalization v0.1 extraction logic from the main-branch code. The earlier comparison figures recorded in the first draft of this document were rechecked and corrected before manuscript drafting.
+
+| Metric | v0.1 baseline logic | ICAIAE branch |
+|---|---:|---:|
+| True positives | 79 | 80 |
+| True negatives | 16 | 40 |
+| False positives | 24 | 0 |
+| False negatives | 21 | 20 |
+| Precision | 0.767 | 1.000 |
+| Recall | 0.790 | 0.800 |
+| F1 score | 0.778 | 0.889 |
+| Specificity | 0.400 | 1.000 |
+| Accuracy | 0.679 | 0.857 |
+
+Of the 20 dedicated duration/frequency paraphrase controls, 19 were falsely flagged by the v0.1 logic and 0 were falsely flagged after normalization. Five additional formatting-equivalent controls were false positives under the earlier logic. The new branch also resolves one frequency-drift case that the earlier frequency recognizer did not capture.
+
+At the case-correctness level, 25 cases changed from incorrect under the baseline logic to correct under the ICAIAE branch, and no cases changed from correct to incorrect on this benchmark. An exact McNemar test on the discordant case outcomes gives p < 0.001. This paired result is evidence of improvement on this controlled benchmark only; it does not establish external clinical generalization.
 
 ## Interpretation for the paper
 
-The expanded controlled benchmark supports four defensible conclusions.
+The benchmark supports four limited but defensible conclusions:
 
-1. A transparent deterministic assurance layer can detect selected, explicitly represented fact-level changes with strong performance inside its implemented taxonomy.
+1. A transparent deterministic assurance layer can detect selected, explicitly represented fact-level changes within its implemented taxonomy.
 2. Claim-level evidence traceability can be preserved without relying on an opaque end-to-end model.
-3. Simple canonicalization can materially reduce false positives caused by known equivalent surface forms.
-4. The approach still fails on unsupported diagnoses and general semantic contradictions outside the rule set, which motivates a future hybrid semantic layer rather than an inflated claim of comprehensive clinical verification.
+3. Restricted normalization materially reduces false positives caused by the known equivalent surface forms represented in this benchmark.
+4. Unsupported diagnoses and general semantic contradictions remain outside the current rule set, motivating future hybrid semantic verification rather than a claim of comprehensive clinical correctness.
 
 ## Reporting cautions
 
-The ICAIAE paper should describe these results as a synthetic controlled evaluation. It should not claim clinical accuracy, diagnostic safety, hospital readiness, medical-device validation, or generalisability to unrestricted clinical language.
+The ICAIAE paper must describe these results as a synthetic controlled evaluation. It must not claim clinical accuracy, diagnostic safety, hospital readiness, medical-device validation, or generalisability to unrestricted clinical language.
 
-The benchmark should be presented as an expanded research baseline whose main purpose is to characterise supported capability and failure boundaries reproducibly.
+The 140-case benchmark is an expanded research baseline and stress test. Because its design was informed by the earlier v0.1 evaluation, the paper should explicitly distinguish it from future independent validation using externally sourced or clinician-annotated clinical data.
