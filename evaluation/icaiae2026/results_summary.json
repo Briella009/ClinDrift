@@ -1,0 +1,45 @@
+{
+  "submission": "ICAIAE 2026 Submission #10",
+  "title": "ClinDrift: Evidence-Traceable Integrity Checking for AI-Assisted Clinical Documentation",
+  "benchmark": {
+    "cases": 140,
+    "positive_cases": 100,
+    "negative_controls": 40,
+    "in_taxonomy_positive_cases": 80,
+    "out_of_taxonomy_challenge_cases": 20,
+    "sha256": "0cca8b673d373b8c73305601e8df2997d34a2334bf0384d5fe0c9a833dbc87ca"
+  },
+  "baseline_v0_1_reconstructed": {
+    "TP": 80,
+    "TN": 20,
+    "FP": 20,
+    "FN": 20,
+    "precision": 0.8,
+    "recall": 0.8,
+    "f1": 0.8,
+    "specificity": 0.5,
+    "accuracy": 0.7142857142857143
+  },
+  "current_configuration": {
+    "TP": 80,
+    "TN": 40,
+    "FP": 0,
+    "FN": 20,
+    "precision": 1.0,
+    "recall": 0.8,
+    "f1": 0.888888888888889,
+    "specificity": 1.0,
+    "accuracy": 0.8571428571428571
+  },
+  "paired_comparison": {
+    "baseline_incorrect_current_correct": 20,
+    "baseline_correct_current_incorrect": 0,
+    "exact_two_sided_mcnemar_binomial_p": 1.9073486328125e-06,
+    "reported_as": "p < 0.001"
+  },
+  "explicit_failure_boundary": {
+    "unsupported_diagnosis": "0/10 detected",
+    "general_semantic_contradiction": "0/10 detected"
+  },
+  "interpretation": "Synthetic controlled functional evaluation only; not clinical validation, diagnostic-safety evidence, medical-device performance, hospital readiness, or an estimate of unrestricted clinical accuracy."
+}
