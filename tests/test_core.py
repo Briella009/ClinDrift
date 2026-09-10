@@ -30,3 +30,24 @@ def test_duration_drift():
     transformed = extract_facts("Headache for 3 weeks.")
     findings = compare_facts(source, transformed)
     assert any(f.drift_type == "Duration drift" for f in findings)
+
+
+def test_duration_word_paraphrase_is_equivalent():
+    source = extract_facts("Headache for 3 days.")
+    transformed = extract_facts("Headache for three days.")
+    findings = compare_facts(source, transformed)
+    assert not findings
+
+
+def test_frequency_paraphrase_is_equivalent():
+    source = extract_facts("Patient takes metformin 500 mg twice a day.")
+    transformed = extract_facts("Patient takes metformin 500 mg twice daily.")
+    findings = compare_facts(source, transformed)
+    assert not findings
+
+
+def test_weekly_paraphrase_is_equivalent():
+    source = extract_facts("Medication is taken weekly.")
+    transformed = extract_facts("Medication is taken once a week.")
+    findings = compare_facts(source, transformed)
+    assert not findings

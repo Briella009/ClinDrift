@@ -13,11 +13,22 @@ class ClinicalFact:
         return asdict(self)
 
 
+NUMBER_WORDS = {
+    "one": "1", "two": "2", "three": "3", "four": "4", "five": "5",
+    "six": "6", "seven": "7", "eight": "8", "nine": "9", "ten": "10",
+    "eleven": "11", "twelve": "12",
+}
+NUM_TOKEN = r"(?:\d+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)"
+
 DOSAGE_RE = re.compile(r"\b\d+(?:\.\d+)?\s?(?:mg|mcg|g|ml|units?)\b", re.I)
 BP_RE = re.compile(r"\b(?:[89]\d|1\d\d|2[0-4]\d)\s*/\s*(?:[4-9]\d|1\d\d)\b")
-DURATION_RE = re.compile(r"\b\d+\s+(?:hours?|days?|weeks?|months?|years?)\b", re.I)
+DURATION_RE = re.compile(rf"\b({NUM_TOKEN})\s+(hours?|days?|weeks?|months?|years?)\b", re.I)
 FREQUENCY_RE = re.compile(
-    r"\b(?:once|twice|three times|four times)\s+(?:a|per)\s+day\b|\b(?:daily|weekly|nightly|morning|evening)\b",
+    r"\b(?:once|twice|three times|four times)\s+(?:a|per)\s+day\b|"
+    r"\b(?:once|twice|three times|four times)\s+daily\b|"
+    r"\bonce\s+a\s+week\b|"
+    r"\beach\s+(?:night|morning|evening)\b|"
+    r"\b(?:daily|weekly|nightly|morning|evening)\b",
     re.I,
 )
 LATERALITY_RE = re.compile(r"\b(?:left|right|bilateral)\b", re.I)
@@ -25,7 +36,7 @@ LATERALITY_RE = re.compile(r"\b(?:left|right|bilateral)\b", re.I)
 MEDICATION_HINTS = {
     "metformin", "penicillin", "amoxicillin", "aspirin", "ibuprofen",
     "paracetamol", "acetaminophen", "lisinopril", "amlodipine", "warfarin",
-    "insulin", "atorvastatin", "omeprazole"
+    "insulin", "atorvastatin", "omeprazole",
 }
 
 ALLERGY_PATTERNS = [
@@ -44,6 +55,45 @@ NEGATION_PATTERNS = [
 def _sentences(text: str) -> List[str]:
     chunks = re.split(r"(?<=[.!?])\s+|\n+", text.strip())
     return [c.strip() for c in chunks if c.strip()]
+
+
+def _canonical_duration(match: re.Match) -> str:
+    number = match.group(1).lower()
+    unit = match.group(2).lower()
+    number = NUMBER_WORDS.get(number, number)
+    if number == "1" and unit.endswith("s"):
+        unit = unit[:-1]
+    elif number != "1" and not unit.endswith("s"):
+        unit += "s"
+    return f"{number} {unit}"
+
+
+def _canonical_frequency(raw: str) -> str:
+    value = re.sub(r"\s+", " ", raw.strip().lower())
+    mapping = {
+        "once a day": "once a day",
+        "once per day": "once a day",
+        "daily": "once a day",
+        "once daily": "once a day",
+        "twice a day": "twice a day",
+        "twice per day": "twice a day",
+        "twice daily": "twice a day",
+        "three times a day": "three times a day",
+        "three times per day": "three times a day",
+        "three times daily": "three times a day",
+        "four times a day": "four times a day",
+        "four times per day": "four times a day",
+        "four times daily": "four times a day",
+        "weekly": "weekly",
+        "once a week": "weekly",
+        "nightly": "nightly",
+        "each night": "nightly",
+        "morning": "morning",
+        "each morning": "morning",
+        "evening": "evening",
+        "each evening": "evening",
+    }
+    return mapping.get(value, value)
 
 
 def extract_facts(text: str) -> List[ClinicalFact]:
@@ -79,10 +129,10 @@ def extract_facts(text: str) -> List[ClinicalFact]:
             facts.append(ClinicalFact("measurement", match.group(0).replace(" ", ""), sentence))
 
         for match in DURATION_RE.finditer(sentence):
-            facts.append(ClinicalFact("duration", match.group(0).lower(), sentence))
+            facts.append(ClinicalFact("duration", _canonical_duration(match), sentence))
 
         for match in FREQUENCY_RE.finditer(sentence):
-            facts.append(ClinicalFact("frequency", match.group(0).lower(), sentence))
+            facts.append(ClinicalFact("frequency", _canonical_frequency(match.group(0)), sentence))
 
         for match in LATERALITY_RE.finditer(sentence):
             facts.append(ClinicalFact("laterality", match.group(0).lower(), sentence))
