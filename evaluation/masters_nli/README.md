@@ -8,7 +8,7 @@ The purpose of this branch is model selection and evaluation. It does **not** re
 
 ## Research question
 
-Does adding an NLI semantic-verification layer improve detection of clinically relevant semantic contradiction or unsupported content beyond the deterministic ClinDrift baseline without creating an unacceptable increase in false-positive alerts on meaning-preserving text?
+Does adding a selected NLI semantic-verification layer improve detection of clinically relevant semantic contradictions and source-information preservation failures beyond the deterministic ClinDrift baseline without creating an unacceptable increase in false-positive alerts on meaning-preserving text?
 
 ## Why NLI
 
@@ -40,6 +40,11 @@ The initial comparison deliberately includes both general-domain and biomedical/
    - PubMedBERT fine-tuned on MNLI and then MedNLI;
    - useful for testing whether domain adaptation improves ClinDrift's task.
 
+4. `cross-encoder/nli-MiniLM2-L6-H768`
+   - compact non-DeBERTa general-domain comparator;
+   - trained on SNLI and MultiNLI;
+   - useful for testing whether a smaller architecture offers a better latency/memory trade-off.
+
 No candidate is selected in advance. Model-card scores are **not** treated as evidence of performance on ClinDrift.
 
 ## Important dataset caution
@@ -50,17 +55,19 @@ The final master's comparison should use a separate frozen ClinDrift held-out be
 
 ## Evaluation stages
 
-### Stage A - development/regression
+### Stage A - development/regression and model selection
 
-Use the existing 140-case controlled ClinDrift benchmark to:
-- verify compatibility with known categories;
-- identify failure modes;
-- debug claim construction;
-- tune non-learned decision thresholds where justified.
+The existing 140-case controlled ClinDrift benchmark is already known to the developer, so it is not treated as one undifferentiated calibration set. Cases are grouped by scenario/template family and used only for development activities such as:
+- regression verification of known categories;
+- debugging claim construction and evidence retrieval;
+- development-only candidate-model comparison;
+- threshold/calibration work on a distinct development/calibration partition or resampling scheme.
+
+The NLI models are not fine-tuned on these 140 cases. The same case must not be used simultaneously as the sole basis for model choice, calibration and final performance reporting.
 
 These cases are **not** the final independent performance estimate.
 
-### Stage B - frozen held-out benchmark
+### Stage B - separately generated and frozen held-out benchmark
 
 Before the final model comparison:
 - freeze a separate benchmark;
@@ -77,18 +84,21 @@ No model-selection decision should be made from the final held-out scores until 
 The model should not be selected on accuracy alone.
 
 Primary criteria:
-- contradiction recall;
-- macro F1;
+- recall on semantic challenge cases;
+- precision / positive predictive value of flagged semantic findings;
 - false-positive rate on meaning-preserving controls;
-- critical-error recall on cases labelled critical;
-- calibration / Expected Calibration Error (ECE).
+- recall for predeclared critical categories.
 
 Secondary criteria:
-- overall accuracy;
-- per-class precision and recall;
+- macro F1 and per-class recall/precision;
+- Brier score and negative log-likelihood;
+- Expected Calibration Error (ECE) plus reliability plots;
+- evidence-pairing recall;
 - median and p95 latency;
 - local memory/storage burden;
 - ability to run without sending clinical text to an external API.
+
+Accuracy is reported but is not a headline selection metric because it depends strongly on the constructed class balance.
 
 ## Human-review threshold
 
@@ -125,3 +135,55 @@ The evaluation script writes:
 - latency summary.
 
 Synthetic benchmark results must not be described as clinical validation or medical-device performance.
+
+
+## Bidirectional integrity coverage
+
+ClinDrift does not rely on one transformed-to-source pass.
+
+### Transformed -> source
+Each transformed claim is matched against source evidence to identify:
+- supported claims (entailment);
+- conflicting claims (contradiction);
+- possible unsupported additions (neutral/no adequate source support).
+
+### Source -> transformed
+Each clinically relevant source claim is matched against transformed documentation to identify:
+- preserved information (an entailing transformed match);
+- changed information (a contradictory match);
+- possible omission (no adequate transformed support).
+
+Neutral does not automatically mean an error. It triggers evidence-search fallback, abstention or human review depending on the pass and available evidence.
+
+## Pairing versus inference
+
+Evidence retrieval/pairing and NLI classification are evaluated separately.
+
+1. **Oracle-pair NLI evaluation:** NLI receives the known relevant source/claim pair.
+2. **End-to-end evaluation:** the automatic pairing component selects evidence before NLI.
+
+Pairing recall is reported as the proportion of evaluable cases for which the required evidence is retrieved. This prevents retrieval failures from being misreported as NLI failures.
+
+## Rule-AI reconciliation
+
+The deterministic layer is never silently overridden.
+
+| Deterministic layer | NLI layer | Final handling |
+|---|---|---|
+| Positive | Agrees | Retain deterministic finding and record AI corroboration |
+| Positive | Neutral/disagrees | Retain deterministic finding and record rule-AI discordance for review |
+| No supported rule | High-confidence contradiction | Create separately labelled AI semantic finding |
+| No supported rule | Low confidence / neutral | Abstain or mark uncertain; do not force an error label |
+| Rule says equivalent | NLI contradicts | Record discordance and require review |
+| Both show no issue | No issue | No automated finding |
+
+## Explanation boundary
+
+The standard explanation surface is:
+- exact evidence pair;
+- mechanism provenance (rule or AI);
+- calibrated class probabilities/uncertainty;
+- model/application version;
+- reviewer disposition.
+
+SHAP is optional token-level attribution for selected AI findings. It is not treated as evidence that a prediction is correct or clinically safe.
