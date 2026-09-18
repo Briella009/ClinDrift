@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClinDrift held-out NLI case",
+  "type": "object",
+  "required": [
+    "id",
+    "premise",
+    "hypothesis",
+    "label",
+    "drift_category",
+    "meaning_preserving_control",
+    "provenance",
+    "annotation_rationale",
+    "adjudication_status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "premise": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hypothesis": {
+      "type": "string",
+      "minLength": 1
+    },
+    "label": {
+      "type": "string",
+      "enum": [
+        "contradiction",
+        "entailment",
+        "neutral"
+      ]
+    },
+    "drift_category": {
+      "type": "string",
+      "minLength": 1
+    },
+    "severity": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "Critical",
+        "High",
+        "Medium",
+        "Low",
+        null
+      ]
+    },
+    "meaning_preserving_control": {
+      "type": "boolean"
+    },
+    "provenance": {
+      "type": "string",
+      "enum": [
+        "synthetic",
+        "open_licensed",
+        "deidentified_authorised"
+      ]
+    },
+    "annotation_rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "independent_check_label": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "contradiction",
+        "entailment",
+        "neutral",
+        null
+      ]
+    },
+    "adjudication_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "agreed",
+        "adjudicated"
+      ]
+    },
+    "split": {
+      "type": "string",
+      "const": "heldout"
+    }
+  },
+  "additionalProperties": true
+}
