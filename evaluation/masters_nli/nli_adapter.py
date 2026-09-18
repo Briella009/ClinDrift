@@ -166,40 +166,65 @@ def _negative_log_likelihood(rows: list[dict], predictions: list[dict]) -> float
 
 
 def classification_summary(rows: list[dict], predictions: list[dict]) -> dict:
-    from sklearn.metrics import (
-        accuracy_score,
-        confusion_matrix,
-        precision_recall_fscore_support,
-    )
+    """Summarize three-class NLI results without requiring sklearn at import time."""
+    if len(rows) != len(predictions):
+        raise ValueError("rows and predictions must have equal length")
 
     truth = [row["label"] for row in rows]
     predicted = [item["label"] for item in predictions]
     confidence = [item["confidence"] for item in predictions]
     correct = [a == b for a, b in zip(truth, predicted)]
 
-    precision, recall, f1, support = precision_recall_fscore_support(
-        truth,
-        predicted,
-        labels=list(LABELS),
-        zero_division=0,
-    )
-    macro_precision, macro_recall, macro_f1, _ = precision_recall_fscore_support(
-        truth,
-        predicted,
-        labels=list(LABELS),
-        average="macro",
-        zero_division=0,
-    )
+    confusion = [
+        [
+            sum(
+                1
+                for gold, pred in zip(truth, predicted)
+                if gold == gold_label and pred == pred_label
+            )
+            for pred_label in LABELS
+        ]
+        for gold_label in LABELS
+    ]
 
-    per_class = {
-        label: {
-            "precision": float(precision[index]),
-            "recall": float(recall[index]),
-            "f1": float(f1[index]),
-            "support": int(support[index]),
+    per_class = {}
+    for label in LABELS:
+        tp = sum(
+            1
+            for gold, pred in zip(truth, predicted)
+            if gold == label and pred == label
+        )
+        fp = sum(
+            1
+            for gold, pred in zip(truth, predicted)
+            if gold != label and pred == label
+        )
+        fn = sum(
+            1
+            for gold, pred in zip(truth, predicted)
+            if gold == label and pred != label
+        )
+        support = sum(1 for gold in truth if gold == label)
+
+        precision = tp / (tp + fp) if (tp + fp) else 0.0
+        recall = tp / (tp + fn) if (tp + fn) else 0.0
+        f1 = (
+            2 * precision * recall / (precision + recall)
+            if (precision + recall)
+            else 0.0
+        )
+
+        per_class[label] = {
+            "precision": float(precision),
+            "recall": float(recall),
+            "f1": float(f1),
+            "support": int(support),
         }
-        for index, label in enumerate(LABELS)
-    }
+
+    macro_precision = sum(x["precision"] for x in per_class.values()) / len(LABELS)
+    macro_recall = sum(x["recall"] for x in per_class.values()) / len(LABELS)
+    macro_f1 = sum(x["f1"] for x in per_class.values()) / len(LABELS)
+    accuracy = sum(correct) / len(correct) if correct else 0.0
 
     critical_indices = [
         index
@@ -231,7 +256,7 @@ def classification_summary(rows: list[dict], predictions: list[dict]) -> dict:
     latencies = [item["latency_ms"] for item in predictions]
 
     return {
-        "accuracy": float(accuracy_score(truth, predicted)),
+        "accuracy": float(accuracy),
         "macro_precision": float(macro_precision),
         "macro_recall": float(macro_recall),
         "macro_f1": float(macro_f1),
@@ -244,10 +269,6 @@ def classification_summary(rows: list[dict], predictions: list[dict]) -> dict:
         "latency_median_ms": float(statistics.median(latencies)) if latencies else 0.0,
         "latency_p95_ms": float(percentile(latencies, 0.95)),
         "per_class": per_class,
-        "confusion_matrix": confusion_matrix(
-            truth,
-            predicted,
-            labels=list(LABELS),
-        ).tolist(),
+        "confusion_matrix": confusion,
         "label_order": list(LABELS),
     }
