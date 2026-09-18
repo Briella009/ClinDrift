@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClinDrift separately frozen held-out oracle NLI case",
+  "type": "object",
+  "required": [
+    "id",
+    "premise",
+    "hypothesis",
+    "label",
+    "drift_category",
+    "scenario_family",
+    "template_family",
+    "meaning_preserving_control",
+    "provenance",
+    "annotation_rationale",
+    "adjudication_status",
+    "split"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "premise": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hypothesis": {
+      "type": "string",
+      "minLength": 1
+    },
+    "label": {
+      "type": "string",
+      "enum": [
+        "contradiction",
+        "entailment",
+        "neutral"
+      ]
+    },
+    "drift_category": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scenario_family": {
+      "type": "string",
+      "minLength": 1
+    },
+    "template_family": {
+      "type": "string",
+      "minLength": 1
+    },
+    "severity": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "Critical",
+        "High",
+        "Medium",
+        "Low",
+        null
+      ]
+    },
+    "meaning_preserving_control": {
+      "type": "boolean"
+    },
+    "provenance": {
+      "type": "string",
+      "const": "synthetic"
+    },
+    "annotation_rationale": {
+      "type": "string",
+      "minLength": 1
+    },
+    "independent_check_label": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "contradiction",
+        "entailment",
+        "neutral",
+        null
+      ]
+    },
+    "adjudication_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "agreed",
+        "adjudicated"
+      ]
+    },
+    "split": {
+      "type": "string",
+      "const": "heldout"
+    },
+    "construction_version": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": true
+}
