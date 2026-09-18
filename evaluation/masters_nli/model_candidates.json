@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "task": "three_class_nli",
+  "labels": [
+    "contradiction",
+    "entailment",
+    "neutral"
+  ],
+  "candidates": [
+    {
+      "id": "general_small",
+      "model": "cross-encoder/nli-deberta-v3-small",
+      "role": "compact_general_nli_baseline",
+      "domain": "general",
+      "notes": "SNLI + MultiNLI. Compare local performance; do not transfer model-card accuracy to ClinDrift."
+    },
+    {
+      "id": "general_factcheck_base",
+      "model": "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
+      "role": "strong_general_fact_verification_baseline",
+      "domain": "general",
+      "notes": "MultiNLI + FEVER-NLI + ANLI. Larger comparator for accuracy/latency trade-off."
+    },
+    {
+      "id": "biomedical_pubmedbert",
+      "model": "pritamdeka/PubMedBERT-MNLI-MedNLI",
+      "role": "biomedical_clinical_nli_candidate",
+      "domain": "biomedical_clinical",
+      "notes": "MNLI then MedNLI. Evaluate for ClinDrift directly; MedNLI has known annotation artifacts."
+    }
+  ],
+  "selection_policy": {
+    "primary_metrics": [
+      "contradiction_recall",
+      "macro_f1",
+      "false_positive_rate_controls",
+      "critical_error_recall",
+      "expected_calibration_error"
+    ],
+    "secondary_metrics": [
+      "accuracy",
+      "latency_median_ms",
+      "latency_p95_ms",
+      "local_model_size"
+    ],
+    "no_single_metric_winner": true
+  }
+}
