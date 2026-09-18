@@ -27,18 +27,29 @@
       "role": "biomedical_clinical_nli_candidate",
       "domain": "biomedical_clinical",
       "notes": "MNLI then MedNLI. Evaluate for ClinDrift directly; MedNLI has known annotation artifacts."
+    },
+    {
+      "id": "general_minilm",
+      "model": "cross-encoder/nli-MiniLM2-L6-H768",
+      "role": "compact_architecture_diversity_baseline",
+      "domain": "general",
+      "notes": "SNLI + MultiNLI. Adds a non-DeBERTa compact comparator for accuracy/latency/memory trade-off."
     }
   ],
   "selection_policy": {
     "primary_metrics": [
-      "contradiction_recall",
-      "macro_f1",
+      "semantic_challenge_recall",
+      "flagged_finding_precision",
       "false_positive_rate_controls",
-      "critical_error_recall",
-      "expected_calibration_error"
+      "critical_category_recall"
     ],
     "secondary_metrics": [
-      "accuracy",
+      "macro_f1",
+      "contradiction_recall",
+      "brier_score",
+      "negative_log_likelihood",
+      "expected_calibration_error",
+      "pairing_recall",
       "latency_median_ms",
       "latency_p95_ms",
       "local_model_size"
