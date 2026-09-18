@@ -26,29 +26,32 @@ def test_full_demo_case():
     assert not app.exception
     assert app.session_state["analysis"] is not None
     assert len(app.session_state["analysis"]["findings"]) >= 1
-    assert len([m for m in app.session_state["mutation_results"] if m.get("applied")]) >= 1
+    assert len(
+        [m for m in app.session_state["mutation_results"] if m.get("applied")]
+    ) >= 1
+    assert app.session_state["source_record"] != app.session_state["transformed_record"]
 
 
 def test_home_action_buttons():
     app = make_app()
 
-    # Clear inputs.
+    # Clear persistent records.
     app.button[1].click().run()
     assert not app.exception
-    assert app.session_state["source_input"] == ""
-    assert app.session_state["transformed_input"] == ""
+    assert app.session_state["source_record"] == ""
+    assert app.session_state["transformed_record"] == ""
 
     # Load the clean synthetic sample.
     app.button[0].click().run()
     assert not app.exception
-    assert app.session_state["source_input"]
-    assert app.session_state["source_input"] == app.session_state["transformed_input"]
+    assert app.session_state["source_record"]
+    assert app.session_state["source_record"] == app.session_state["transformed_record"]
 
     # Prepare the complete presentation case from Home.
     app.button[2].click().run()
     assert not app.exception
     assert app.session_state["analysis"] is not None
-    assert app.session_state["source_input"] != app.session_state["transformed_input"]
+    assert app.session_state["source_record"] != app.session_state["transformed_record"]
 
 
 def test_mutation_lab_buttons():
@@ -58,12 +61,12 @@ def test_mutation_lab_buttons():
     app.button[0].click().run()
     assert not app.exception
     assert app.session_state["mutation_results"]
-    assert app.session_state["source_input"] != app.session_state["transformed_input"]
+    assert app.session_state["source_record"] != app.session_state["transformed_record"]
 
     app.button[1].click().run()
     assert not app.exception
     assert app.session_state["mutation_results"] == []
-    assert app.session_state["source_input"] == app.session_state["transformed_input"]
+    assert app.session_state["source_record"] == app.session_state["transformed_record"]
 
 
 def test_integrity_and_evidence_workflow():
@@ -80,8 +83,13 @@ def test_integrity_and_evidence_workflow():
     assert not app.exception
     assert len(app.expander) >= 1
     assert len(app.text_area) >= 1
+
     app.text_area[0].set_value("Reviewed during presentation test.").run()
-    assert app.session_state["review_note"] == "Reviewed during presentation test."
+    assert not app.exception
+    assert (
+        app.session_state["review_note_record"]
+        == "Reviewed during presentation test."
+    )
 
 
 def test_audit_report_renders_after_analysis():
