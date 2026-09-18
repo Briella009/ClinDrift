@@ -140,6 +140,31 @@ def read_jsonl(path: str | Path) -> list[dict]:
     return rows
 
 
+def _multiclass_brier_score(rows: list[dict], predictions: list[dict]) -> float:
+    """Mean multiclass Brier score across the three NLI labels."""
+    if not rows:
+        return 0.0
+    total = 0.0
+    for row, prediction in zip(rows, predictions):
+        scores = prediction.get("scores", {})
+        for label in LABELS:
+            target = 1.0 if row["label"] == label else 0.0
+            total += (float(scores.get(label, 0.0)) - target) ** 2
+    return total / len(rows)
+
+
+def _negative_log_likelihood(rows: list[dict], predictions: list[dict]) -> float:
+    """Mean negative log likelihood for the gold NLI label."""
+    if not rows:
+        return 0.0
+    epsilon = 1e-12
+    losses = []
+    for row, prediction in zip(rows, predictions):
+        probability = float(prediction.get("scores", {}).get(row["label"], 0.0))
+        losses.append(-math.log(max(probability, epsilon)))
+    return sum(losses) / len(losses)
+
+
 def classification_summary(rows: list[dict], predictions: list[dict]) -> dict:
     from sklearn.metrics import (
         accuracy_score,
@@ -213,6 +238,8 @@ def classification_summary(rows: list[dict], predictions: list[dict]) -> dict:
         "contradiction_recall": per_class["contradiction"]["recall"],
         "critical_error_recall": critical_recall,
         "false_positive_rate_controls": false_positive_rate_controls,
+        "brier_score": _multiclass_brier_score(rows, predictions),
+        "negative_log_likelihood": _negative_log_likelihood(rows, predictions),
         "expected_calibration_error": expected_calibration_error(confidence, correct),
         "latency_median_ms": float(statistics.median(latencies)) if latencies else 0.0,
         "latency_p95_ms": float(percentile(latencies, 0.95)),
