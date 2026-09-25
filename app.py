@@ -6,6 +6,11 @@ import streamlit as st
 from src.drift_engine import compare_facts
 from src.extractor import extract_facts
 from src.mutations import apply_all_mutations
+from src.review_protocol import (
+    ALLOWED_DISPOSITIONS,
+    build_review_tasks,
+    validate_disposition,
+)
 from src.scoring import integrity_score, review_status
 
 
@@ -57,6 +62,7 @@ STATE_DEFAULTS = {
     "mutation_results": [],
     "analysis": None,
     "review_note_record": "",
+    "review_dispositions": {},
 }
 
 for key, value in STATE_DEFAULTS.items():
@@ -111,14 +117,19 @@ def analyse_current_inputs():
     source_facts = extract_facts(source_text)
     transformed_facts = extract_facts(transformed_text)
     findings = compare_facts(source_facts, transformed_facts)
+    review_tasks = build_review_tasks(findings)
     score = integrity_score(findings)
 
     st.session_state["analysis"] = {
         "findings": findings,
+        "review_tasks": review_tasks,
         "score": score,
         "status": review_status(score, findings),
         "source_fact_count": len(source_facts),
         "transformed_fact_count": len(transformed_facts),
+    }
+    st.session_state["review_dispositions"] = {
+        task.review_id: "Unreviewed" for task in review_tasks
     }
 
 
@@ -128,6 +139,7 @@ def reset_sample():
     st.session_state["mutation_results"] = []
     st.session_state["analysis"] = None
     st.session_state["review_note_record"] = ""
+    st.session_state["review_dispositions"] = {}
     _sync_visible_text_widgets()
 
 
@@ -137,6 +149,7 @@ def clear_inputs():
     st.session_state["mutation_results"] = []
     st.session_state["analysis"] = None
     st.session_state["review_note_record"] = ""
+    st.session_state["review_dispositions"] = {}
     _sync_visible_text_widgets()
 
 
@@ -172,6 +185,14 @@ def build_report():
     if analysis is None:
         return None
 
+    dispositions = st.session_state.get("review_dispositions", {})
+    structured_review = []
+    for task in analysis.get("review_tasks", []):
+        disposition = validate_disposition(
+            dispositions.get(task.review_id, "Unreviewed")
+        )
+        structured_review.append({**task.to_dict(), "disposition": disposition})
+
     return {
         "project": "ClinDrift",
         "version": "0.1",
@@ -182,6 +203,7 @@ def build_report():
         "source_fact_count": analysis["source_fact_count"],
         "transformed_fact_count": analysis["transformed_fact_count"],
         "findings": [f.to_dict() for f in analysis["findings"]],
+        "structured_review": structured_review,
         "controlled_mutations": st.session_state.get("mutation_results", []),
         "review_note": st.session_state.get("review_note_record", ""),
         "disclaimer": (
@@ -470,7 +492,10 @@ elif page == "Evidence":
                 "evidence used by the detector."
             )
 
-            for index, finding in enumerate(findings, 1):
+            review_tasks = analysis.get("review_tasks", build_review_tasks(findings))
+            dispositions = st.session_state.setdefault("review_dispositions", {})
+
+            for index, (finding, task) in enumerate(zip(findings, review_tasks), 1):
                 with st.expander(
                     f"{index}. {finding.drift_type} - {finding.severity}",
                     expanded=True,
@@ -491,6 +516,23 @@ elif page == "Evidence":
 
                     st.write("**Why it was flagged**")
                     st.write(finding.rationale)
+
+                    st.write("**Verification question**")
+                    st.write(task.verification_question)
+                    st.write("**Required action**")
+                    st.write(task.required_action)
+                    st.write("**Escalation rule**")
+                    st.warning(task.escalation_rule)
+
+                    disposition_key = f"disposition_{task.review_id}"
+                    current_disposition = dispositions.get(task.review_id, "Unreviewed")
+                    selected = st.selectbox(
+                        "Reviewer disposition",
+                        ALLOWED_DISPOSITIONS,
+                        index=ALLOWED_DISPOSITIONS.index(current_disposition),
+                        key=disposition_key,
+                    )
+                    dispositions[task.review_id] = selected
 
         st.subheader("Human review note")
         st.session_state.setdefault(
@@ -524,8 +566,8 @@ elif page == "Audit Report":
     else:
         report = build_report()
         st.write(
-            "The report preserves the score, findings, evidence, "
-            "controlled-mutation record and reviewer note."
+            "The report preserves the score, findings, evidence, structured "
+            "review tasks and dispositions, controlled-mutation record and reviewer note."
         )
         report_json = json.dumps(report, indent=2)
 

@@ -88,6 +88,7 @@ Primary criteria:
 - precision / positive predictive value of flagged semantic findings;
 - false-positive rate on meaning-preserving controls;
 - recall for predeclared critical categories.
+- catastrophic-miss rate for predeclared Critical cases.
 
 Secondary criteria:
 - macro F1 and per-class recall/precision;
@@ -97,6 +98,8 @@ Secondary criteria:
 - median and p95 latency;
 - local memory/storage burden;
 - ability to run without sending clinical text to an external API.
+- repeated-run finding and evidence-pair stability;
+- review burden at the selected operating threshold.
 
 Accuracy is reported but is not a headline selection metric because it depends strongly on the constructed class balance.
 
@@ -135,6 +138,14 @@ The evaluation script writes:
 - latency summary.
 
 Synthetic benchmark results must not be described as clinical validation or medical-device performance.
+
+## Structured oversight evaluation
+
+“Human review required” is a routing instruction, not evidence that human oversight is effective. The interface therefore attaches a verification question, required action, escalation rule and constrained reviewer disposition to each finding. The study protocol in `evaluation/human_oversight/` compares unaided and ClinDrift-supported review. Its primary outcomes include overall and Critical-error sensitivity, false-positive rate and review time.
+
+## Pipeline-level evaluation
+
+Component scores are not sufficient for an ambient-documentation pipeline. The prospective protocol in `evaluation/pipeline_integrity/` preserves the reference transcript, ASR transcript, generated note and ClinDrift output so serious errors can be attributed to their originating or amplifying stage. Nigerian-accented English and English–Yoruba code-switching are proposed evaluation strata, not current performance claims.
 
 
 ## Bidirectional integrity coverage

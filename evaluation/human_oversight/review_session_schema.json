@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClinDrift human-oversight review session",
+  "type": "object",
+  "required": ["participant_id", "case_id", "condition", "reference_has_error", "reviewer_flagged_error", "review_time_seconds"],
+  "properties": {
+    "participant_id": {"type": "string"},
+    "case_id": {"type": "string"},
+    "condition": {"enum": ["unaided", "clindrift_structured"]},
+    "sequence": {"type": "integer", "minimum": 1},
+    "reference_has_error": {"type": "boolean"},
+    "reference_severity": {"enum": ["Critical", "High", "Medium", "Low", "None"]},
+    "reference_category": {"type": "string"},
+    "reviewer_flagged_error": {"type": "boolean"},
+    "reviewer_disposition": {"enum": ["Confirmed integrity error", "Not an integrity error", "Insufficient evidence", "Escalated"]},
+    "review_time_seconds": {"type": "number", "minimum": 0},
+    "reviewer_confidence": {"type": "integer", "minimum": 1, "maximum": 5},
+    "notes": {"type": "string"}
+  },
+  "additionalProperties": false
+}

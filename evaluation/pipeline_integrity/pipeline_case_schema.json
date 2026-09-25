@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClinDrift ASR-to-note pipeline case",
+  "type": "object",
+  "required": ["case_id", "language_condition", "reference_transcript", "asr_transcript", "generated_note", "model_versions", "errors"],
+  "properties": {
+    "case_id": {"type": "string"},
+    "speaker_id": {"type": "string"},
+    "language_condition": {"enum": ["nigerian_english", "english_yoruba_code_switch", "other"]},
+    "code_switch_density": {"type": "number", "minimum": 0, "maximum": 1},
+    "acoustic_condition": {"type": "string"},
+    "consultation_complexity": {"type": "string"},
+    "reference_transcript": {"type": "string"},
+    "asr_transcript": {"type": "string"},
+    "generated_note": {"type": "string"},
+    "model_versions": {
+      "type": "object",
+      "required": ["asr", "note_generator", "clindrift"],
+      "properties": {
+        "asr": {"type": "string"},
+        "note_generator": {"type": "string"},
+        "clindrift": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["error_id", "severity", "category", "root_cause"],
+        "properties": {
+          "error_id": {"type": "string"},
+          "severity": {"enum": ["Critical", "High", "Medium", "Low"]},
+          "category": {"type": "string"},
+          "root_cause": {"enum": ["note_originated", "propagated_asr", "amplified_asr", "silently_corrected", "unresolved"]},
+          "clindrift_flagged": {"type": "boolean"},
+          "reviewer_disposition": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

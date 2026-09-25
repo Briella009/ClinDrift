@@ -43,7 +43,7 @@ ClinDrift v0.1 currently provides:
 - severity classification
 - transparent integrity scoring
 - claim-level evidence traceability
-- human-review signalling
+- structured, evidence-linked human-review prompts and dispositions
 - controlled mutation generation
 - mutation detection self-testing
 - downloadable JSON audit reports
@@ -106,6 +106,9 @@ Each supported finding can contain:
 - source evidence
 - transformed evidence
 - human-readable rationale
+- a category-specific verification question
+- a required action and escalation rule
+- a constrained reviewer disposition for the audit trail
 
 For example, an allergy contradiction can show:
 
