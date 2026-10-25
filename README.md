@@ -2,6 +2,13 @@
 
 **Clinical Information Integrity Assurance**
 
+[![CI](https://github.com/Briella009/ClinDrift/actions/workflows/ci.yml/badge.svg)](https://github.com/Briella009/ClinDrift/actions/workflows/ci.yml)
+[![License](https://img.shields.io/github/license/Briella009/ClinDrift)](LICENSE)
+![Research Prototype](https://img.shields.io/badge/status-research%20prototype-516b78)
+![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
+
+**[Quick demo](#try-clindrift-in-2-minutes)** · [Methodology](docs/METHODOLOGY.md) · [Evaluation](docs/EVALUATION_RESULTS.md) · [Threat model](docs/THREAT_MODEL.md) · [Contributing](CONTRIBUTING.md)
+
 ClinDrift is an open-source research prototype for detecting safety-relevant semantic drift between source clinical information and transformed or AI-generated clinical text.
 
 The project investigates one central question:
@@ -11,6 +18,23 @@ The project investigates one central question:
 ClinDrift focuses on information integrity, evidence traceability, transparent detection, reproducible evaluation, and human oversight.
 
 > **Research prototype only. ClinDrift does not diagnose patients, certify AI systems, or determine regulatory compliance. Human clinical verification remains required.**
+
+## Try ClinDrift in 2 minutes
+
+Use synthetic or appropriately de-identified text only.
+
+```bash
+git clone https://github.com/Briella009/ClinDrift.git
+cd ClinDrift
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+python -m pip install -r requirements.txt
+python -m streamlit run app.py
+```
+
+In the app, use the built-in **Clinical Drift Mutation Lab** to introduce a controlled dosage, allergy, or duration change, then run the integrity check and inspect the evidence-linked finding.
+
+If the research direction is useful to you, **star the repository to follow progress**, **fork it to experiment with additional drift cases**, or contribute a focused improvement through [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
@@ -291,11 +315,9 @@ tests/test_core.py::test_duration_drift PASSED
 ### 1. Clone the repository
 
 ```bash
-git clone <repository-url>
-cd ClinDrift-v0.1
+git clone https://github.com/Briella009/ClinDrift.git
+cd ClinDrift
 ```
-
-The public repository URL will replace `<repository-url>` after the GitHub repository is created.
 
 ### 2. Create a virtual environment
 
@@ -550,19 +572,11 @@ Cybersecurity · Artificial Intelligence · Digital Health · Trustworthy System
 
 ---
 
-## Screenshots
+## Demo walkthrough
 
-The public repository will include representative screenshots of:
+A step-by-step walkthrough for the current research prototype is available in [`docs/DEMO_WALKTHROUGH.md`](docs/DEMO_WALKTHROUGH.md).
 
-- ClinDrift interface
-- source vs transformed clinical information
-- Clinical Drift Mutation Lab
-- integrity assessment
-- evidence traceability
-- mutation detection self-test
-- audit report
-- research prototype interface
-- UK and Canada research context
+Representative screenshots or a short demo video should only be added when they are captured from the actual application; this repository does not use illustrative images as substitutes for real interface output.
 
 ---
 
