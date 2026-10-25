@@ -12,6 +12,19 @@ ClinDrift is a research prototype for clinical information-integrity assurance. 
 - improve privacy, threat-model, or safe-demo guidance;
 - propose narrowly scoped drift detectors with clear assumptions and tests.
 
+## Starter pull requests
+
+Good first contributions include:
+
+- add one synthetic negative control that should not trigger a finding;
+- add one controlled mutation fixture for an already supported drift category;
+- improve evidence-traceability or report wording without adding clinical claims;
+- improve Streamlit accessibility or demo instructions;
+- add a unit test for a parsing/comparison edge case;
+- improve privacy, threat-model, or reproducibility documentation.
+
+Keep first contributions small and use synthetic or appropriately de-identified data only.
+
 ## Data rules
 
 Do not contribute identifiable patient records, clinical screenshots containing personal data, credentials, employer data, or other confidential health information.
