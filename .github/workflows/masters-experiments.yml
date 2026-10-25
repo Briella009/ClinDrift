@@ -1,0 +1,65 @@
+name: ClinDrift Master's Synthetic Experiments
+on:
+  push:
+    branches:
+      - masters/experiment-evaluation-2026-10-25
+    paths:
+      - .github/workflows/masters-experiments.yml
+      - evaluation/masters_nli/execute_experiment.py
+      - evaluation/masters_nli/experiment_data.py
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  run-master-experiments:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      HF_HUB_DISABLE_XET: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+      OMP_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Identify source and hardware
+        run: |
+          mkdir -p experiment_outputs
+          git rev-parse HEAD > experiment_outputs/source_commit.txt
+          python - <<'PY'
+          import platform, json, os
+          from pathlib import Path
+          data={"python":platform.python_version(), "platform":platform.platform(), "cpus":os.cpu_count(), "branch":os.getenv("GITHUB_REF_NAME")}
+          Path("experiment_outputs/environment_preflight.json").write_text(json.dumps(data,indent=2))
+          print(data)
+          PY
+      - name: Install independent baseline and validation packages
+        run: |
+          python -m pip install --disable-pip-version-check numpy==1.26.4 scipy==1.14.1 rapidfuzz==3.11.0
+      - name: Validate scripts and generate separate synthetic 280-case pilot
+        run: |
+          python -m py_compile evaluation/masters_nli/execute_experiment.py evaluation/masters_nli/experiment_data.py
+          python -u evaluation/masters_nli/execute_experiment.py --stage baseline --output experiment_outputs
+      - name: Install CPU NLI dependencies
+        run: |
+          python -m pip install --disable-pip-version-check torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --disable-pip-version-check transformers==4.48.3 huggingface-hub==0.28.1 sentencepiece==0.2.0 protobuf==5.29.3 psutil==6.1.1 safetensors==0.5.2
+          python -m pip freeze > experiment_outputs/environment_pip_freeze.txt
+      - name: Evaluate four NLI candidates and exploratory hybrid pilot
+        run: |
+          python -u evaluation/masters_nli/execute_experiment.py --stage models --output experiment_outputs
+      - name: Save raw predictions and immutable evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clindrift-experimental-evidence-${{ github.run_id }}
+          path: experiment_outputs
+          if-no-files-found: warn
+          retention-days: 30
