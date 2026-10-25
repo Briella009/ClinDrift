@@ -4,10 +4,10 @@
 
 [![CI](https://github.com/Briella009/ClinDrift/actions/workflows/ci.yml/badge.svg)](https://github.com/Briella009/ClinDrift/actions/workflows/ci.yml)
 [![License](https://img.shields.io/github/license/Briella009/ClinDrift)](LICENSE)
-![Research Prototype](https://img.shields.io/badge/status-research%20prototype-516b78)
+[![Release](https://img.shields.io/badge/release-v0.1.0--alpha-516b78)](https://github.com/Briella009/ClinDrift/releases/tag/v0.1.0-alpha)
 ![Python](https://img.shields.io/badge/Python-3.x-3776AB?logo=python&logoColor=white)
 
-**[Quick demo](#try-clindrift-in-2-minutes)** · [Methodology](docs/METHODOLOGY.md) · [Evaluation](docs/EVALUATION_RESULTS.md) · [Threat model](docs/THREAT_MODEL.md) · [Contributing](CONTRIBUTING.md)
+**[Quick demo](#try-clindrift-in-2-minutes)** · [Alpha release](https://github.com/Briella009/ClinDrift/releases/tag/v0.1.0-alpha) · [Methodology](docs/METHODOLOGY.md) · [Evaluation](docs/EVALUATION_RESULTS.md) · [Threat model](docs/THREAT_MODEL.md) · [Contributing](CONTRIBUTING.md)
 
 ClinDrift is an open-source research prototype for detecting safety-relevant semantic drift between source clinical information and transformed or AI-generated clinical text.
 
@@ -554,9 +554,9 @@ ClinDrift v0.1 is built with:
 
 ## Project Status
 
-**Version:** v0.1
+**Version:** v0.1.0-alpha
 
-**Status:** Research Prototype
+**Status:** Alpha research prototype
 
 ClinDrift is under active research and development.
 
