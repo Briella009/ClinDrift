@@ -1,0 +1,11 @@
+{
+  "adjudication_status": "pending; author-generated not clinician adjudicated",
+  "benchmark_locked_pre_inference": true,
+  "dataset_sha256": "a24e6d278d10d3a3f80581edd9cec46165f976a97da5e51ab174b6f29cf147c4",
+  "final_clinical_validation": false,
+  "model_checkpoint": "6f5cf0a2b59cabb106aca4c287eed12e357e90eb",
+  "n": 280,
+  "protocol_sha256": "63ba20128f5f806dd0ad2cb02e94302e0b704573aa75a8b0c500f27b8a1b299b",
+  "source_code_commit": "6d11f007a9e70b254e8d8394ca21f5db992bb99c",
+  "timestamp_before_inference": "2026-10-25T07:02:04.935193+00:00"
+}

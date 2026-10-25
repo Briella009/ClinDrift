@@ -1,0 +1,244 @@
+{
+  "baseline_case_metrics": {
+    "FN": 160,
+    "FP": 0,
+    "TN": 80,
+    "TP": 40,
+    "accuracy": 0.42857142857142855,
+    "f1": 0.3333333333333333,
+    "false_positive_rate": 0.0,
+    "n": 280,
+    "precision": 1.0,
+    "recall": 0.2
+  },
+  "category_details": {
+    "afebrile_paraphrase_control": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 0,
+      "hybrid_flags": 20,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 0
+    },
+    "evening_timing_paraphrase_control": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 0,
+      "hybrid_flags": 0,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 0
+    },
+    "negative_to_positive_test": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 20
+    },
+    "no_fever_to_fever": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 20
+    },
+    "omitted_allergy": {
+      "baseline_flags": 20,
+      "gold_evidence_aligned_ai_flags": 0,
+      "hybrid_flags": 20,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 20
+    },
+    "pain_mild_to_severe": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 20
+    },
+    "prescription_dose_change": {
+      "baseline_flags": 20,
+      "gold_evidence_aligned_ai_flags": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 20
+    },
+    "pressure_format_control": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 0,
+      "hybrid_flags": 0,
+      "n": 20,
+      "review_routed": 0,
+      "truth_errors": 0
+    },
+    "symptom_improving_to_worsening": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 20
+    },
+    "unchanged_control": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 0,
+      "hybrid_flags": 0,
+      "n": 20,
+      "review_routed": 0,
+      "truth_errors": 0
+    },
+    "unsupported_diagnosis": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 0,
+      "hybrid_flags": 0,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 20
+    },
+    "unsupported_procedure": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 0,
+      "hybrid_flags": 0,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 20
+    },
+    "walks_unaided_to_assisted": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 20
+    },
+    "wound_dry_to_discharging": {
+      "baseline_flags": 0,
+      "gold_evidence_aligned_ai_flags": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "review_routed": 20,
+      "truth_errors": 20
+    }
+  },
+  "clustered_descriptive_uncertainty": {
+    "families": 14,
+    "interpretation": "Descriptive bootstrap of constructed template families; not a patient-population interval.",
+    "n_bootstrap": 3000,
+    "paired_differences_hybrid_minus_baseline": {
+      "f1": {
+        "ci95_descriptive": [
+          0.16666666666666663,
+          0.8888888888888888
+        ],
+        "estimate": 0.5087719298245614,
+        "valid_draws": 3000
+      },
+      "false_positive_rate": {
+        "ci95_descriptive": [
+          0.0,
+          1.0
+        ],
+        "estimate": 0.25,
+        "valid_draws": 2974
+      },
+      "precision": {
+        "ci95_descriptive": [
+          -0.33333333333333337,
+          0.0
+        ],
+        "estimate": -0.11111111111111116,
+        "valid_draws": 2632
+      },
+      "recall": {
+        "ci95_descriptive": [
+          0.2727272727272727,
+          0.9
+        ],
+        "estimate": 0.6000000000000001,
+        "valid_draws": 3000
+      }
+    },
+    "unit": "synthetic scenario/template family"
+  },
+  "dataset_sha256": "a24e6d278d10d3a3f80581edd9cec46165f976a97da5e51ab174b6f29cf147c4",
+  "extra_hybrid_flagged_case_count": 140,
+  "freeze_record": {
+    "adjudication_status": "pending; author-generated not clinician adjudicated",
+    "benchmark_locked_pre_inference": true,
+    "dataset_sha256": "a24e6d278d10d3a3f80581edd9cec46165f976a97da5e51ab174b6f29cf147c4",
+    "final_clinical_validation": false,
+    "model_checkpoint": "6f5cf0a2b59cabb106aca4c287eed12e357e90eb",
+    "n": 280,
+    "protocol_sha256": "63ba20128f5f806dd0ad2cb02e94302e0b704573aa75a8b0c500f27b8a1b299b",
+    "source_code_commit": "6d11f007a9e70b254e8d8394ca21f5db992bb99c",
+    "timestamp_before_inference": "2026-10-25T07:02:04.935193+00:00"
+  },
+  "frozen_contradiction_threshold": 0.5,
+  "gold_aligned_ai_contradiction_case_count": 140,
+  "hybrid_case_metrics": {
+    "FN": 40,
+    "FP": 20,
+    "TN": 60,
+    "TP": 160,
+    "accuracy": 0.7857142857142857,
+    "f1": 0.8421052631578947,
+    "false_positive_rate": 0.25,
+    "n": 280,
+    "precision": 0.8888888888888888,
+    "recall": 0.8
+  },
+  "limitations": [
+    "Labels are researcher/code generated and all require qualified external adjudication before a final thesis claim.",
+    "Even with shuffled positions, scenario templates remain correlated and examples are artificially constructed.",
+    "The decision threshold and temperature were fitted on just 28 known development cases with overlapping families.",
+    "Subsequent experiments are chronologically after inspecting pilot v1, so no unqualified independent model-selection claim.",
+    "The prototype still has no live full-document NLI integration in Streamlit, no deployment privacy assessment.",
+    "No clinician effect, patient outcome, medical safety or clinical risk validation.",
+    "Review-only ambiguous outputs do not count as automatically detected errors.",
+    "NLI evidence-grounded relation must be reported separately from case-level positive flag recall."
+  ],
+  "model_id": "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
+  "model_revision": "6f5cf0a2b59cabb106aca4c287eed12e357e90eb",
+  "number_of_evaluable_directional_gold_pairs": 440,
+  "oracle_label_metrics_on_existing_target_pairs": {
+    "multiclass_brier": 0.30016588861544596,
+    "n": 220,
+    "negative_log_likelihood": 0.5875735343518508,
+    "relation_accuracy": 0.8181818181818182,
+    "top_label_ece": 0.12367326246463836
+  },
+  "oracle_target_pair_count": 220,
+  "pairing_recall_at_1": 1.0,
+  "pairing_recall_at_3": 1.0,
+  "protocol_sha256": "63ba20128f5f806dd0ad2cb02e94302e0b704573aa75a8b0c500f27b8a1b299b",
+  "reporting_boundary": "Author-constructed synthetic cases; no independent clinical annotation or patient-outcome evidence.",
+  "review_burden": 0.8571428571428571,
+  "review_required_n": 240,
+  "software": {
+    "CPU_cores": 4,
+    "memory": "max sampled resident set, not process peak over all milliseconds",
+    "model_load_seconds": 5.637512018000052,
+    "observed_total_experiment_seconds": 94.81679931499991,
+    "python": "3.11.17",
+    "rapidfuzz": "3.11.0",
+    "timing": {
+      "batch_size": 12,
+      "max_sampled_RSS_bytes": 1283743744,
+      "p50_batch_avg_ms": 43.772401250000335,
+      "p95_batch_avg_ms": 53.445841750004774,
+      "pairs": 1880,
+      "timing_scope": "Average batch forward/softmax time per pair; excludes tokenization, loading and Python pairing."
+    },
+    "torch": "2.6.0+cpu",
+    "transformers": "4.48.3"
+  },
+  "source_commit": "6d11f007a9e70b254e8d8394ca21f5db992bb99c",
+  "status": "LOCKED_BUT_NOT_INDEPENDENTLY_ADJUDICATED_SYNTHETIC_TECHNICAL_TEST",
+  "temperature_scaled_from_prior_development_set": 1.8915189348793875,
+  "unanswerable_missing_counterpart_case_count": 60
+}
