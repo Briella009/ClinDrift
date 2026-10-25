@@ -9,6 +9,12 @@
 
 **[Quick demo](#try-clindrift-in-2-minutes)** · [Alpha release](https://github.com/Briella009/ClinDrift/releases/tag/v0.1.0-alpha) · [Methodology](docs/METHODOLOGY.md) · [Evaluation](docs/EVALUATION_RESULTS.md) · [Threat model](docs/THREAT_MODEL.md) · [Contributing](CONTRIBUTING.md)
 
+<p align="center">
+  <img src="assets/screenshots/clindrift-demo.gif" alt="ClinDrift alpha research prototype showing the synthetic controlled-drift integrity check and evidence traceability" width="100%" />
+</p>
+
+<p align="center"><em>Real alpha UI captured from the repository app using the built-in synthetic controlled-drift demo.</em></p>
+
 ClinDrift is an open-source research prototype for detecting safety-relevant semantic drift between source clinical information and transformed or AI-generated clinical text.
 
 The project investigates one central question:
