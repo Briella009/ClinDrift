@@ -8,6 +8,7 @@ from .extractor import ClinicalFact
 @dataclass
 class DriftFinding:
     drift_type: str
+    category: str
     severity: str
     source_value: str
     transformed_value: str
@@ -50,6 +51,7 @@ def _add(findings, drift_type, category, source_value, transformed_value,
     findings.append(
         DriftFinding(
             drift_type=drift_type,
+            category=category,
             severity=severity or _severity(category),
             source_value=source_value,
             transformed_value=transformed_value,

@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ClinDrift held-out evidence-pairing case",
+  "type": "object",
+  "required": [
+    "id",
+    "source_units",
+    "transformed_units",
+    "direction",
+    "query_index",
+    "gold_candidate_indices",
+    "drift_category",
+    "scenario_family",
+    "template_family",
+    "provenance",
+    "adjudication_status",
+    "split"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "source_units": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "transformed_units": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "transformed_to_source",
+        "source_to_transformed"
+      ]
+    },
+    "query_index": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "gold_candidate_indices": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uniqueItems": true
+    },
+    "drift_category": {
+      "type": "string",
+      "minLength": 1
+    },
+    "scenario_family": {
+      "type": "string",
+      "minLength": 1
+    },
+    "template_family": {
+      "type": "string",
+      "minLength": 1
+    },
+    "provenance": {
+      "type": "string",
+      "const": "synthetic"
+    },
+    "adjudication_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "agreed",
+        "adjudicated"
+      ]
+    },
+    "split": {
+      "type": "string",
+      "const": "heldout_pairing"
+    },
+    "construction_version": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "additionalProperties": true
+}

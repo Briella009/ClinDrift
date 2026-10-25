@@ -1,0 +1,171 @@
+{
+  "automatic_top1_review_burden": 0.8571428571428571,
+  "benchmark_sha256": "1a4566694decb0f3253c6bd7a132f5b2fc224fbc328917462fe04bd2e1375242",
+  "candidate_selected_for_exploratory_pilot": "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
+  "contradiction_decision_threshold_dev_only": 0.5,
+  "four_model_comparison_completed": true,
+  "limitations": [
+    "No independent or clinical adjudication of labels",
+    "Not a clinically validated severity rubric",
+    "Separate CLI hybrid evaluation, not proof of Streamlit integration",
+    "No prospective patient-derived data",
+    "Model selection from limited known synthetic cases",
+    "Temperature and threshold fitted on the same small calibration subset",
+    "Automatic pairing top-1 lexical baseline only"
+  ],
+  "model_revision": "6f5cf0a2b59cabb106aca4c287eed12e357e90eb",
+  "n_pilot": 280,
+  "oracle_review_burden": 0.8571428571428571,
+  "paired_test_rules_vs_automatic_top1": {
+    "baseline_correct_hybrid_incorrect": 20,
+    "baseline_incorrect_hybrid_correct": 74,
+    "interpretation": "Exploratory pilot only; sample labels pending review, not a confirmatory hypothesis test",
+    "mcnemar_exact_two_sided_p": 1.8461183606763278e-08,
+    "mean_flag_rate_difference": 0.3357142857142857,
+    "paired_bootstrap_flag_rate_difference_95pct_interval": [
+      0.28214285714285714,
+      0.3892857142857143
+    ]
+  },
+  "paired_test_rules_vs_oracle": {
+    "baseline_correct_hybrid_incorrect": 20,
+    "baseline_incorrect_hybrid_correct": 74,
+    "interpretation": "Exploratory pilot only; sample labels pending review, not a confirmatory hypothesis test",
+    "mcnemar_exact_two_sided_p": 1.8461183606763278e-08,
+    "mean_flag_rate_difference": 0.3357142857142857,
+    "paired_bootstrap_flag_rate_difference_95pct_interval": [
+      0.28214285714285714,
+      0.3892857142857143
+    ]
+  },
+  "pairing_recall_at_1": 1.0,
+  "pairing_recall_at_3": 1.0,
+  "peak_memory_rss_bytes": 1287598080,
+  "pilot_hybrid_oracle": {
+    "FN": 6,
+    "FP": 40,
+    "TN": 40,
+    "TP": 194,
+    "accuracy": 0.8357142857142857,
+    "f1": 0.8940092165898618,
+    "false_positive_rate": 0.5,
+    "n": 280,
+    "precision": 0.8290598290598291,
+    "recall": 0.97,
+    "specificity": 0.5
+  },
+  "pilot_hybrid_top1": {
+    "FN": 6,
+    "FP": 40,
+    "TN": 40,
+    "TP": 194,
+    "accuracy": 0.8357142857142857,
+    "f1": 0.8940092165898618,
+    "false_positive_rate": 0.5,
+    "n": 280,
+    "precision": 0.8290598290598291,
+    "recall": 0.97,
+    "specificity": 0.5
+  },
+  "pilot_nli_oracle": {
+    "accuracy": 0.7785714285714286,
+    "controls_n": 80,
+    "critical_category_auto_recall": 0.8,
+    "critical_category_review_routing_recall": 1.0,
+    "critical_n": 60,
+    "decision_threshold": 0.5,
+    "ece_top_label": 0.1406136206093372,
+    "false_positive_rate_controls": 0.25,
+    "flagged_finding_precision": 0.8901098901098901,
+    "flagged_n": 182,
+    "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+    "macro_f1": 0.7653042135026645,
+    "multiclass_brier": 0.376026700216296,
+    "n": 280,
+    "negative_log_likelihood": 0.6798466101085232,
+    "nli_per_class": {
+      "contradiction": {
+        "f1": 0.794701986754967,
+        "precision": 0.6593406593406593,
+        "recall": 1.0,
+        "support": 120
+      },
+      "entailment": {
+        "f1": 0.8571428571428571,
+        "precision": 1.0,
+        "recall": 0.75,
+        "support": 80
+      },
+      "neutral": {
+        "f1": 0.6440677966101694,
+        "precision": 1.0,
+        "recall": 0.475,
+        "support": 80
+      }
+    },
+    "p50_inference_ms": 137.80215949999786,
+    "p95_inference_ms": 141.95095799999535,
+    "semantic_challenge_auto_recall": 1.0,
+    "semantic_challenge_n": 40,
+    "uncertain_neutral_review_rate": 0.1357142857142857
+  },
+  "pilot_nli_top1_automatic_pairing": {
+    "accuracy": 0.7785714285714286,
+    "controls_n": 80,
+    "critical_category_auto_recall": 0.8,
+    "critical_category_review_routing_recall": 1.0,
+    "critical_n": 60,
+    "decision_threshold": 0.5,
+    "ece_top_label": 0.1406136206093372,
+    "false_positive_rate_controls": 0.25,
+    "flagged_finding_precision": 0.8901098901098901,
+    "flagged_n": 182,
+    "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+    "macro_f1": 0.7653042135026645,
+    "multiclass_brier": 0.376026700216296,
+    "n": 280,
+    "negative_log_likelihood": 0.6798466101085232,
+    "nli_per_class": {
+      "contradiction": {
+        "f1": 0.794701986754967,
+        "precision": 0.6593406593406593,
+        "recall": 1.0,
+        "support": 120
+      },
+      "entailment": {
+        "f1": 0.8571428571428571,
+        "precision": 1.0,
+        "recall": 0.75,
+        "support": 80
+      },
+      "neutral": {
+        "f1": 0.6440677966101694,
+        "precision": 1.0,
+        "recall": 0.475,
+        "support": 80
+      }
+    },
+    "p50_inference_ms": 137.74506450000956,
+    "p95_inference_ms": 142.1948970000244,
+    "semantic_challenge_auto_recall": 1.0,
+    "semantic_challenge_n": 40,
+    "uncertain_neutral_review_rate": 0.1357142857142857
+  },
+  "pilot_rules": {
+    "FN": 80,
+    "FP": 20,
+    "TN": 60,
+    "TP": 120,
+    "accuracy": 0.6428571428571429,
+    "f1": 0.7058823529411764,
+    "false_positive_rate": 0.25,
+    "n": 280,
+    "precision": 0.8571428571428571,
+    "recall": 0.6,
+    "specificity": 0.75
+  },
+  "reporting_boundary": "This is a synthetic, author-generated, not independently adjudicated pilot. It is not the final master's held-out performance estimate, clinical validation, a medical-device claim, or a patient-safety outcome.",
+  "run_utc": "2026-10-25T06:27:28.149343+00:00",
+  "status": "exploratory_280_case_synthetic_pilot_not_final",
+  "temperature_dev_only": 1.8915189348793875
+}
