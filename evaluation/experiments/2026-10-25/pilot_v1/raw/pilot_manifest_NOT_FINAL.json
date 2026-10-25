@@ -1,0 +1,63 @@
+{
+  "benchmark_file": "synthetic_heldout_pilot_280.jsonl",
+  "case_count": 280,
+  "final_freeze": false,
+  "mode": "nli",
+  "reporting_boundary": "Synthetic controlled benchmark only; not clinical validation, medical-device performance, hospital readiness or patient-outcome evidence.",
+  "sha256": "1a4566694decb0f3253c6bd7a132f5b2fc224fbc328917462fe04bd2e1375242",
+  "summary": {
+    "categories": {
+      "afebrile_paraphrase_control": 20,
+      "consciousness_contradiction": 20,
+      "dose_contradiction": 20,
+      "dose_paraphrase_control": 20,
+      "frequency_paraphrase_control": 20,
+      "laterality_contradiction": 20,
+      "omitted_allergy": 20,
+      "omitted_medication": 20,
+      "pressure_contradiction": 20,
+      "schedule_contradiction": 20,
+      "symptom_course_contradiction": 20,
+      "unchanged_control": 20,
+      "unsupported_diagnosis": 20,
+      "unsupported_procedure": 20
+    },
+    "labels": {
+      "contradiction": 120,
+      "entailment": 80,
+      "neutral": 80
+    },
+    "scenario_families": {
+      "new_synthetic_afebrile_paraphrase_control": 20,
+      "new_synthetic_consciousness_contradiction": 20,
+      "new_synthetic_dose_contradiction": 20,
+      "new_synthetic_dose_paraphrase_control": 20,
+      "new_synthetic_frequency_paraphrase_control": 20,
+      "new_synthetic_laterality_contradiction": 20,
+      "new_synthetic_omitted_allergy": 20,
+      "new_synthetic_omitted_medication": 20,
+      "new_synthetic_pressure_contradiction": 20,
+      "new_synthetic_schedule_contradiction": 20,
+      "new_synthetic_symptom_course_contradiction": 20,
+      "new_synthetic_unchanged_control": 20,
+      "new_synthetic_unsupported_diagnosis": 20,
+      "new_synthetic_unsupported_procedure": 20
+    },
+    "template_families": {
+      "new_pilot_v1_afebrile_paraphrase_control": 20,
+      "new_pilot_v1_consciousness_contradiction": 20,
+      "new_pilot_v1_dose_contradiction": 20,
+      "new_pilot_v1_dose_paraphrase_control": 20,
+      "new_pilot_v1_frequency_paraphrase_control": 20,
+      "new_pilot_v1_laterality_contradiction": 20,
+      "new_pilot_v1_omitted_allergy": 20,
+      "new_pilot_v1_omitted_medication": 20,
+      "new_pilot_v1_pressure_contradiction": 20,
+      "new_pilot_v1_schedule_contradiction": 20,
+      "new_pilot_v1_symptom_course_contradiction": 20,
+      "new_pilot_v1_unchanged_control": 20,
+      "new_pilot_v1_unsupported_diagnosis": 20,
+      "new_pilot_v1_unsupported_procedure": 20
+    }
+  }
+}

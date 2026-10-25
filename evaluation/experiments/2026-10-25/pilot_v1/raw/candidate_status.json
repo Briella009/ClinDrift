@@ -1,0 +1,406 @@
+{
+  "candidates": [
+    {
+      "dev_full_diagnostic": {
+        "accuracy": 0.9142857142857143,
+        "controls_n": 40,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 20,
+        "decision_threshold": 0.8,
+        "ece_top_label": 0.08856247748647414,
+        "false_positive_rate_controls": 0.0,
+        "flagged_finding_precision": 1.0,
+        "flagged_n": 65,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9086947131330896,
+        "multiclass_brier": 0.17406558027987812,
+        "n": 140,
+        "negative_log_likelihood": 0.4759099457600812,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.9117647058823529,
+            "precision": 0.9393939393939394,
+            "recall": 0.8857142857142857,
+            "support": 70
+          },
+          "entailment": {
+            "f1": 0.975609756097561,
+            "precision": 0.9523809523809523,
+            "recall": 1.0,
+            "support": 40
+          },
+          "neutral": {
+            "f1": 0.8387096774193549,
+            "precision": 0.8125,
+            "recall": 0.8666666666666667,
+            "support": 30
+          }
+        },
+        "p50_inference_ms": 64.32997749999458,
+        "p95_inference_ms": 67.52070499999263,
+        "semantic_challenge_auto_recall": 0.8,
+        "semantic_challenge_n": 10,
+        "uncertain_neutral_review_rate": 0.22857142857142856
+      },
+      "id": "general_small",
+      "label_mapping": [
+        "contradiction",
+        "entailment",
+        "neutral"
+      ],
+      "load_and_infer_completed_at_utc": "2026-10-25T06:25:27.653729+00:00",
+      "load_seconds": 8.22886287899999,
+      "name": "cross-encoder/nli-deberta-v3-small",
+      "parameter_count": 141897219,
+      "revision_sha": "fa2804872c3b4bd748f38c0185cc85775361e735",
+      "selection_metrics": {
+        "accuracy": 0.9107142857142857,
+        "controls_n": 32,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 16,
+        "decision_threshold": 0.8,
+        "ece_top_label": 0.09010016385998044,
+        "false_positive_rate_controls": 0.0,
+        "flagged_finding_precision": 1.0,
+        "flagged_n": 53,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9033442747728463,
+        "multiclass_brier": 0.1783162909823543,
+        "n": 112,
+        "negative_log_likelihood": 0.46599577983085716,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.9090909090909091,
+            "precision": 0.9259259259259259,
+            "recall": 0.8928571428571429,
+            "support": 56
+          },
+          "entailment": {
+            "f1": 0.9846153846153847,
+            "precision": 0.9696969696969697,
+            "recall": 1.0,
+            "support": 32
+          },
+          "neutral": {
+            "f1": 0.816326530612245,
+            "precision": 0.8,
+            "recall": 0.8333333333333334,
+            "support": 24
+          }
+        },
+        "p50_inference_ms": 64.22737249998534,
+        "p95_inference_ms": 67.28475200000616,
+        "semantic_challenge_auto_recall": 0.875,
+        "semantic_challenge_n": 8,
+        "uncertain_neutral_review_rate": 0.22321428571428573
+      },
+      "selection_score": 0.95625,
+      "started_at_utc": "2026-10-25T06:25:09.947706+00:00",
+      "status": "completed"
+    },
+    {
+      "dev_full_diagnostic": {
+        "accuracy": 0.9714285714285714,
+        "controls_n": 40,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 20,
+        "decision_threshold": 0.8,
+        "ece_top_label": 0.021349196348871502,
+        "false_positive_rate_controls": 0.0,
+        "flagged_finding_precision": 1.0,
+        "flagged_n": 66,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9702078362209081,
+        "multiclass_brier": 0.04079633679406456,
+        "n": 140,
+        "negative_log_likelihood": 0.09360893249272638,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.9705882352941176,
+            "precision": 1.0,
+            "recall": 0.9428571428571428,
+            "support": 70
+          },
+          "entailment": {
+            "f1": 0.9876543209876543,
+            "precision": 0.975609756097561,
+            "recall": 1.0,
+            "support": 40
+          },
+          "neutral": {
+            "f1": 0.9523809523809523,
+            "precision": 0.9090909090909091,
+            "recall": 1.0,
+            "support": 30
+          }
+        },
+        "p50_inference_ms": 126.46202499999504,
+        "p95_inference_ms": 131.1179779999918,
+        "semantic_challenge_auto_recall": 0.9,
+        "semantic_challenge_n": 10,
+        "uncertain_neutral_review_rate": 0.2357142857142857
+      },
+      "id": "general_factcheck_base",
+      "label_mapping": [
+        "entailment",
+        "neutral",
+        "contradiction"
+      ],
+      "load_and_infer_completed_at_utc": "2026-10-25T06:25:48.837527+00:00",
+      "load_seconds": 3.149460400999999,
+      "name": "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
+      "parameter_count": 184424451,
+      "revision_sha": "6f5cf0a2b59cabb106aca4c287eed12e357e90eb",
+      "selection_metrics": {
+        "accuracy": 0.9821428571428571,
+        "controls_n": 32,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 16,
+        "decision_threshold": 0.8,
+        "ece_top_label": 0.019262609737259965,
+        "false_positive_rate_controls": 0.0,
+        "flagged_finding_precision": 1.0,
+        "flagged_n": 54,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9806060606060606,
+        "multiclass_brier": 0.017184442564290484,
+        "n": 112,
+        "negative_log_likelihood": 0.02807618577438264,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.9818181818181818,
+            "precision": 1.0,
+            "recall": 0.9642857142857143,
+            "support": 56
+          },
+          "entailment": {
+            "f1": 1.0,
+            "precision": 1.0,
+            "recall": 1.0,
+            "support": 32
+          },
+          "neutral": {
+            "f1": 0.9600000000000001,
+            "precision": 0.9230769230769231,
+            "recall": 1.0,
+            "support": 24
+          }
+        },
+        "p50_inference_ms": 126.44090299998823,
+        "p95_inference_ms": 131.1179779999918,
+        "semantic_challenge_auto_recall": 1.0,
+        "semantic_challenge_n": 8,
+        "uncertain_neutral_review_rate": 0.23214285714285715
+      },
+      "selection_score": 1.0,
+      "started_at_utc": "2026-10-25T06:25:27.822526+00:00",
+      "status": "completed"
+    },
+    {
+      "dev_full_diagnostic": {
+        "accuracy": 0.9642857142857143,
+        "controls_n": 40,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 20,
+        "decision_threshold": 0.8,
+        "ece_top_label": 0.03471617996692657,
+        "false_positive_rate_controls": 0.0,
+        "flagged_finding_precision": 1.0,
+        "flagged_n": 66,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9617544430373374,
+        "multiclass_brier": 0.06684633469963204,
+        "n": 140,
+        "negative_log_likelihood": 0.23352901865768588,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.9705882352941176,
+            "precision": 1.0,
+            "recall": 0.9428571428571428,
+            "support": 70
+          },
+          "entailment": {
+            "f1": 0.963855421686747,
+            "precision": 0.9302325581395349,
+            "recall": 1.0,
+            "support": 40
+          },
+          "neutral": {
+            "f1": 0.9508196721311476,
+            "precision": 0.9354838709677419,
+            "recall": 0.9666666666666667,
+            "support": 30
+          }
+        },
+        "p50_inference_ms": 46.18295099999159,
+        "p95_inference_ms": 49.7642189999965,
+        "semantic_challenge_auto_recall": 0.9,
+        "semantic_challenge_n": 10,
+        "uncertain_neutral_review_rate": 0.22142857142857142
+      },
+      "id": "biomedical_pubmedbert",
+      "label_mapping": [
+        "contradiction",
+        "entailment",
+        "neutral"
+      ],
+      "load_and_infer_completed_at_utc": "2026-10-25T06:26:02.092820+00:00",
+      "load_seconds": 6.5559922189999895,
+      "name": "pritamdeka/PubMedBERT-MNLI-MedNLI",
+      "parameter_count": 109484547,
+      "revision_sha": "f1b6ce2e0d49f295b4cbcdc56c01b5fab6d068ab",
+      "selection_metrics": {
+        "accuracy": 0.9642857142857143,
+        "controls_n": 32,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 16,
+        "decision_threshold": 0.8,
+        "ece_top_label": 0.03472801776868951,
+        "false_positive_rate_controls": 0.0,
+        "flagged_finding_precision": 1.0,
+        "flagged_n": 53,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9603165147070782,
+        "multiclass_brier": 0.0657115304025885,
+        "n": 112,
+        "negative_log_likelihood": 0.20792110177855802,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.9724770642201834,
+            "precision": 1.0,
+            "recall": 0.9464285714285714,
+            "support": 56
+          },
+          "entailment": {
+            "f1": 0.9696969696969697,
+            "precision": 0.9411764705882353,
+            "recall": 1.0,
+            "support": 32
+          },
+          "neutral": {
+            "f1": 0.9387755102040817,
+            "precision": 0.92,
+            "recall": 0.9583333333333334,
+            "support": 24
+          }
+        },
+        "p50_inference_ms": 45.23390850000908,
+        "p95_inference_ms": 48.665622000015674,
+        "semantic_challenge_auto_recall": 0.875,
+        "semantic_challenge_n": 8,
+        "uncertain_neutral_review_rate": 0.22321428571428573
+      },
+      "selection_score": 0.95625,
+      "started_at_utc": "2026-10-25T06:25:49.025186+00:00",
+      "status": "completed"
+    },
+    {
+      "dev_full_diagnostic": {
+        "accuracy": 0.95,
+        "controls_n": 40,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 20,
+        "decision_threshold": 0.8,
+        "ece_top_label": 0.02952560569558824,
+        "false_positive_rate_controls": 0.025,
+        "flagged_finding_precision": 0.9833333333333333,
+        "flagged_n": 60,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9518830399255325,
+        "multiclass_brier": 0.08560245591106737,
+        "n": 140,
+        "negative_log_likelihood": 0.17149568683921784,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.9481481481481482,
+            "precision": 0.9846153846153847,
+            "recall": 0.9142857142857143,
+            "support": 70
+          },
+          "entailment": {
+            "f1": 0.9397590361445783,
+            "precision": 0.9069767441860465,
+            "recall": 0.975,
+            "support": 40
+          },
+          "neutral": {
+            "f1": 0.967741935483871,
+            "precision": 0.9375,
+            "recall": 1.0,
+            "support": 30
+          }
+        },
+        "p50_inference_ms": 23.890935499991883,
+        "p95_inference_ms": 28.300213999983725,
+        "semantic_challenge_auto_recall": 0.9,
+        "semantic_challenge_n": 10,
+        "uncertain_neutral_review_rate": 0.22857142857142856
+      },
+      "id": "general_minilm",
+      "label_mapping": [
+        "contradiction",
+        "entailment",
+        "neutral"
+      ],
+      "load_and_infer_completed_at_utc": "2026-10-25T06:26:10.210887+00:00",
+      "load_seconds": 4.460445672999981,
+      "name": "cross-encoder/nli-MiniLM2-L6-H768",
+      "parameter_count": 82120707,
+      "revision_sha": "b95119ce93d3e065de6214e38cd4a97b0f2f2c6d",
+      "selection_metrics": {
+        "accuracy": 0.9553571428571429,
+        "controls_n": 32,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 16,
+        "decision_threshold": 0.8,
+        "ece_top_label": 0.028899109257119054,
+        "false_positive_rate_controls": 0.03125,
+        "flagged_finding_precision": 0.9795918367346939,
+        "flagged_n": 49,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9559915314043754,
+        "multiclass_brier": 0.07362735271122803,
+        "n": 112,
+        "negative_log_likelihood": 0.1437008317753178,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.9541284403669724,
+            "precision": 0.9811320754716981,
+            "recall": 0.9285714285714286,
+            "support": 56
+          },
+          "entailment": {
+            "f1": 0.9538461538461539,
+            "precision": 0.9393939393939394,
+            "recall": 0.96875,
+            "support": 32
+          },
+          "neutral": {
+            "f1": 0.9600000000000001,
+            "precision": 0.9230769230769231,
+            "recall": 1.0,
+            "support": 24
+          }
+        },
+        "p50_inference_ms": 23.87615249999442,
+        "p95_inference_ms": 28.300213999983725,
+        "semantic_challenge_auto_recall": 1.0,
+        "semantic_challenge_n": 8,
+        "uncertain_neutral_review_rate": 0.23214285714285715
+      },
+      "selection_score": 0.988648,
+      "started_at_utc": "2026-10-25T06:26:02.205671+00:00",
+      "status": "completed"
+    }
+  ],
+  "completed_at": "2026-10-25T06:26:10.210905+00:00",
+  "reporting_boundary": "This is a synthetic, author-generated, not independently adjudicated pilot. It is not the final master's held-out performance estimate, clinical validation, a medical-device claim, or a patient-safety outcome."
+}

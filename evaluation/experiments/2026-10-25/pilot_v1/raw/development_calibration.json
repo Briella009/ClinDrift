@@ -1,0 +1,326 @@
+{
+  "after_calibration": {
+    "accuracy": 0.9285714285714286,
+    "controls_n": 8,
+    "critical_category_auto_recall": 1.0,
+    "critical_category_review_routing_recall": 1.0,
+    "critical_n": 4,
+    "decision_threshold": 0.5,
+    "ece_top_label": 0.0428471929312063,
+    "false_positive_rate_controls": 0.0,
+    "flagged_finding_precision": 1.0,
+    "flagged_n": 12,
+    "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+    "macro_f1": 0.9291101055806937,
+    "multiclass_brier": 0.11658349385889409,
+    "n": 28,
+    "negative_log_likelihood": 0.2461363685078069,
+    "nli_per_class": {
+      "contradiction": {
+        "f1": 0.923076923076923,
+        "precision": 1.0,
+        "recall": 0.8571428571428571,
+        "support": 14
+      },
+      "entailment": {
+        "f1": 0.9411764705882353,
+        "precision": 0.8888888888888888,
+        "recall": 1.0,
+        "support": 8
+      },
+      "neutral": {
+        "f1": 0.923076923076923,
+        "precision": 0.8571428571428571,
+        "recall": 1.0,
+        "support": 6
+      }
+    },
+    "p50_inference_ms": 126.52726799998959,
+    "p95_inference_ms": 130.86426099999926,
+    "semantic_challenge_auto_recall": 0.5,
+    "semantic_challenge_n": 2,
+    "uncertain_neutral_review_rate": 0.25
+  },
+  "before_calibration": {
+    "accuracy": 0.9285714285714286,
+    "controls_n": 8,
+    "critical_category_auto_recall": 1.0,
+    "critical_category_review_routing_recall": 1.0,
+    "critical_n": 4,
+    "decision_threshold": 0.8,
+    "ece_top_label": 0.06637386977672577,
+    "false_positive_rate_controls": 0.0,
+    "flagged_finding_precision": 1.0,
+    "flagged_n": 12,
+    "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+    "macro_f1": 0.9291101055806937,
+    "multiclass_brier": 0.13524391371316086,
+    "n": 28,
+    "negative_log_likelihood": 0.3557399193661012,
+    "nli_per_class": {
+      "contradiction": {
+        "f1": 0.923076923076923,
+        "precision": 1.0,
+        "recall": 0.8571428571428571,
+        "support": 14
+      },
+      "entailment": {
+        "f1": 0.9411764705882353,
+        "precision": 0.8888888888888888,
+        "recall": 1.0,
+        "support": 8
+      },
+      "neutral": {
+        "f1": 0.923076923076923,
+        "precision": 0.8571428571428571,
+        "recall": 1.0,
+        "support": 6
+      }
+    },
+    "p50_inference_ms": 126.52726799998959,
+    "p95_inference_ms": 130.86426099999926,
+    "semantic_challenge_auto_recall": 0.5,
+    "semantic_challenge_n": 2,
+    "uncertain_neutral_review_rate": 0.25
+  },
+  "calibration_sample_count": 28,
+  "fit_nll": 0.2461363685078069,
+  "fit_on_same_rows_used_for_threshold": "Yes; thresholds exploratory and susceptible to optimism",
+  "model": "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
+  "reporting_boundary": "This is a synthetic, author-generated, not independently adjudicated pilot. It is not the final master's held-out performance estimate, clinical validation, a medical-device claim, or a patient-safety outcome.",
+  "revision_sha": "6f5cf0a2b59cabb106aca4c287eed12e357e90eb",
+  "selected_threshold": 0.5,
+  "temperature": 1.8915189348793875,
+  "threshold_grid": [
+    {
+      "metrics": {
+        "accuracy": 0.9285714285714286,
+        "controls_n": 8,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 4,
+        "decision_threshold": 0.5,
+        "ece_top_label": 0.0428471929312063,
+        "false_positive_rate_controls": 0.0,
+        "flagged_finding_precision": 1.0,
+        "flagged_n": 12,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9291101055806937,
+        "multiclass_brier": 0.11658349385889409,
+        "n": 28,
+        "negative_log_likelihood": 0.2461363685078069,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.923076923076923,
+            "precision": 1.0,
+            "recall": 0.8571428571428571,
+            "support": 14
+          },
+          "entailment": {
+            "f1": 0.9411764705882353,
+            "precision": 0.8888888888888888,
+            "recall": 1.0,
+            "support": 8
+          },
+          "neutral": {
+            "f1": 0.923076923076923,
+            "precision": 0.8571428571428571,
+            "recall": 1.0,
+            "support": 6
+          }
+        },
+        "p50_inference_ms": 126.52726799998959,
+        "p95_inference_ms": 130.86426099999926,
+        "semantic_challenge_auto_recall": 0.5,
+        "semantic_challenge_n": 2,
+        "uncertain_neutral_review_rate": 0.25
+      },
+      "score": 0.825,
+      "threshold": 0.5
+    },
+    {
+      "metrics": {
+        "accuracy": 0.9285714285714286,
+        "controls_n": 8,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 4,
+        "decision_threshold": 0.6,
+        "ece_top_label": 0.0428471929312063,
+        "false_positive_rate_controls": 0.0,
+        "flagged_finding_precision": 1.0,
+        "flagged_n": 12,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9291101055806937,
+        "multiclass_brier": 0.11658349385889409,
+        "n": 28,
+        "negative_log_likelihood": 0.2461363685078069,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.923076923076923,
+            "precision": 1.0,
+            "recall": 0.8571428571428571,
+            "support": 14
+          },
+          "entailment": {
+            "f1": 0.9411764705882353,
+            "precision": 0.8888888888888888,
+            "recall": 1.0,
+            "support": 8
+          },
+          "neutral": {
+            "f1": 0.923076923076923,
+            "precision": 0.8571428571428571,
+            "recall": 1.0,
+            "support": 6
+          }
+        },
+        "p50_inference_ms": 126.52726799998959,
+        "p95_inference_ms": 130.86426099999926,
+        "semantic_challenge_auto_recall": 0.5,
+        "semantic_challenge_n": 2,
+        "uncertain_neutral_review_rate": 0.25
+      },
+      "score": 0.825,
+      "threshold": 0.6
+    },
+    {
+      "metrics": {
+        "accuracy": 0.9285714285714286,
+        "controls_n": 8,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 4,
+        "decision_threshold": 0.7,
+        "ece_top_label": 0.0428471929312063,
+        "false_positive_rate_controls": 0.0,
+        "flagged_finding_precision": 1.0,
+        "flagged_n": 12,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9291101055806937,
+        "multiclass_brier": 0.11658349385889409,
+        "n": 28,
+        "negative_log_likelihood": 0.2461363685078069,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.923076923076923,
+            "precision": 1.0,
+            "recall": 0.8571428571428571,
+            "support": 14
+          },
+          "entailment": {
+            "f1": 0.9411764705882353,
+            "precision": 0.8888888888888888,
+            "recall": 1.0,
+            "support": 8
+          },
+          "neutral": {
+            "f1": 0.923076923076923,
+            "precision": 0.8571428571428571,
+            "recall": 1.0,
+            "support": 6
+          }
+        },
+        "p50_inference_ms": 126.52726799998959,
+        "p95_inference_ms": 130.86426099999926,
+        "semantic_challenge_auto_recall": 0.5,
+        "semantic_challenge_n": 2,
+        "uncertain_neutral_review_rate": 0.25
+      },
+      "score": 0.825,
+      "threshold": 0.7
+    },
+    {
+      "metrics": {
+        "accuracy": 0.9285714285714286,
+        "controls_n": 8,
+        "critical_category_auto_recall": 1.0,
+        "critical_category_review_routing_recall": 1.0,
+        "critical_n": 4,
+        "decision_threshold": 0.8,
+        "ece_top_label": 0.0428471929312063,
+        "false_positive_rate_controls": 0.0,
+        "flagged_finding_precision": 1.0,
+        "flagged_n": 12,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9291101055806937,
+        "multiclass_brier": 0.11658349385889409,
+        "n": 28,
+        "negative_log_likelihood": 0.2461363685078069,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.923076923076923,
+            "precision": 1.0,
+            "recall": 0.8571428571428571,
+            "support": 14
+          },
+          "entailment": {
+            "f1": 0.9411764705882353,
+            "precision": 0.8888888888888888,
+            "recall": 1.0,
+            "support": 8
+          },
+          "neutral": {
+            "f1": 0.923076923076923,
+            "precision": 0.8571428571428571,
+            "recall": 1.0,
+            "support": 6
+          }
+        },
+        "p50_inference_ms": 126.52726799998959,
+        "p95_inference_ms": 130.86426099999926,
+        "semantic_challenge_auto_recall": 0.5,
+        "semantic_challenge_n": 2,
+        "uncertain_neutral_review_rate": 0.25
+      },
+      "score": 0.825,
+      "threshold": 0.8
+    },
+    {
+      "metrics": {
+        "accuracy": 0.9285714285714286,
+        "controls_n": 8,
+        "critical_category_auto_recall": 0.75,
+        "critical_category_review_routing_recall": 0.75,
+        "critical_n": 4,
+        "decision_threshold": 0.9,
+        "ece_top_label": 0.0428471929312063,
+        "false_positive_rate_controls": 0.0,
+        "flagged_finding_precision": 1.0,
+        "flagged_n": 10,
+        "inference_timing_boundary": "forward pass incl. CPU softmax, excludes tokenization, loading and full UI",
+        "macro_f1": 0.9291101055806937,
+        "multiclass_brier": 0.11658349385889409,
+        "n": 28,
+        "negative_log_likelihood": 0.2461363685078069,
+        "nli_per_class": {
+          "contradiction": {
+            "f1": 0.923076923076923,
+            "precision": 1.0,
+            "recall": 0.8571428571428571,
+            "support": 14
+          },
+          "entailment": {
+            "f1": 0.9411764705882353,
+            "precision": 0.8888888888888888,
+            "recall": 1.0,
+            "support": 8
+          },
+          "neutral": {
+            "f1": 0.923076923076923,
+            "precision": 0.8571428571428571,
+            "recall": 1.0,
+            "support": 6
+          }
+        },
+        "p50_inference_ms": 126.52726799998959,
+        "p95_inference_ms": 130.86426099999926,
+        "semantic_challenge_auto_recall": 0.5,
+        "semantic_challenge_n": 2,
+        "uncertain_neutral_review_rate": 0.25
+      },
+      "score": 0.775,
+      "threshold": 0.9
+    }
+  ]
+}
