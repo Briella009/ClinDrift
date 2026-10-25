@@ -1,0 +1,156 @@
+{
+  "by_category": {
+    "afebrile_paraphrase_control": {
+      "errors": 0,
+      "hybrid_flags": 20,
+      "n": 20,
+      "nli_relation_accuracy": 0.0,
+      "rules_flags": 0
+    },
+    "consciousness_contradiction": {
+      "errors": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "nli_relation_accuracy": 1.0,
+      "rules_flags": 0
+    },
+    "dose_contradiction": {
+      "errors": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "nli_relation_accuracy": 1.0,
+      "rules_flags": 20
+    },
+    "dose_paraphrase_control": {
+      "errors": 0,
+      "hybrid_flags": 0,
+      "n": 20,
+      "nli_relation_accuracy": 1.0,
+      "rules_flags": 0
+    },
+    "frequency_paraphrase_control": {
+      "errors": 0,
+      "hybrid_flags": 20,
+      "n": 20,
+      "nli_relation_accuracy": 1.0,
+      "rules_flags": 20
+    },
+    "laterality_contradiction": {
+      "errors": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "nli_relation_accuracy": 1.0,
+      "rules_flags": 20
+    },
+    "omitted_allergy": {
+      "errors": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "nli_relation_accuracy": 0.6,
+      "rules_flags": 20
+    },
+    "omitted_medication": {
+      "errors": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "nli_relation_accuracy": 1.0,
+      "rules_flags": 20
+    },
+    "pressure_contradiction": {
+      "errors": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "nli_relation_accuracy": 1.0,
+      "rules_flags": 20
+    },
+    "schedule_contradiction": {
+      "errors": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "nli_relation_accuracy": 1.0,
+      "rules_flags": 20
+    },
+    "symptom_course_contradiction": {
+      "errors": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "nli_relation_accuracy": 1.0,
+      "rules_flags": 0
+    },
+    "unchanged_control": {
+      "errors": 0,
+      "hybrid_flags": 0,
+      "n": 20,
+      "nli_relation_accuracy": 1.0,
+      "rules_flags": 0
+    },
+    "unsupported_diagnosis": {
+      "errors": 20,
+      "hybrid_flags": 20,
+      "n": 20,
+      "nli_relation_accuracy": 0.0,
+      "rules_flags": 0
+    },
+    "unsupported_procedure": {
+      "errors": 20,
+      "hybrid_flags": 14,
+      "n": 20,
+      "nli_relation_accuracy": 0.3,
+      "rules_flags": 0
+    }
+  },
+  "calibration_temperature": 1.8915189348793875,
+  "case_selection_calibration_disjoint": true,
+  "cases": 280,
+  "corrections": [
+    "Target-specified pairing used a gold direction and selected only query index 0; not a genuine all-sentence end-to-end test.",
+    "All 280 gold target pairs were at (0,0); recall@1=100% is artificially easy and recall@3 covers all three sentences.",
+    "Selection and calibration split had disjoint cases but shared template families.",
+    "No independent adjudication; benchmark rows remain pending and were not final-frozen.",
+    "Positive-case flag recall does not require correct clinical mechanism or gold NLI relation.",
+    "The original RSS number is a one-time memory sample, not a peak.",
+    "Previous bootstrap interval measured difference in overall flag rate, not difference in recall.",
+    "No clinician evaluation, clinical generalization, externally judged correctness, or production integration was tested."
+  ],
+  "gold_query_and_candidate_always_at_index_zero": 280,
+  "historical_run_id": 40168975981,
+  "historical_source_sha": "2d412af5d63aec9839fbbebb31c540149e203b56",
+  "newly_flagged_error_cases": 74,
+  "newly_flagged_error_cases_with_wrong_nli_relation": 34,
+  "nli_relation_confusion": {
+    "contradiction -> contradiction": 120,
+    "entailment -> contradiction": 20,
+    "entailment -> entailment": 60,
+    "neutral -> contradiction": 42,
+    "neutral -> neutral": 38
+  },
+  "reported_pairing_recall_at_1": 1.0,
+  "results_recomputed": {
+    "hybrid": {
+      "FN": 6,
+      "FP": 40,
+      "TN": 40,
+      "TP": 194,
+      "accuracy": 0.8357142857142857,
+      "f1": 0.8940092165898618,
+      "false_positive_rate": 0.5,
+      "precision": 0.8290598290598291,
+      "recall": 0.97
+    },
+    "rules": {
+      "FN": 80,
+      "FP": 20,
+      "TN": 60,
+      "TP": 120,
+      "accuracy": 0.6428571428571429,
+      "f1": 0.7058823529411765,
+      "false_positive_rate": 0.25,
+      "precision": 0.8571428571428571,
+      "recall": 0.6
+    }
+  },
+  "selected_threshold": 0.5,
+  "shared_selection_calibration_template_family_count": 14,
+  "status": "audited exploratory synthetic pilot, NOT a final clinically validated result",
+  "zip_sha256": "7d62af4e119f2b8e70ba2965ea68fdef40f44e13a055c042cfa859dabd28068e"
+}

@@ -1,0 +1,6 @@
+{
+  "python": "3.11.17",
+  "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+  "cpus": 4,
+  "branch": "masters/experiment-evaluation-2026-10-25"
+}

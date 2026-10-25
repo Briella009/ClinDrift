@@ -1,0 +1,8 @@
+{
+  "completed_utc": "2026-10-25T07:03:39.753666+00:00",
+  "end_dataset_sha256": "a24e6d278d10d3a3f80581edd9cec46165f976a97da5e51ab174b6f29cf147c4",
+  "end_protocol_sha256": "63ba20128f5f806dd0ad2cb02e94302e0b704573aa75a8b0c500f27b8a1b299b",
+  "identical_after_inference": true,
+  "original_dataset_sha256": "a24e6d278d10d3a3f80581edd9cec46165f976a97da5e51ab174b6f29cf147c4",
+  "original_protocol_sha256": "63ba20128f5f806dd0ad2cb02e94302e0b704573aa75a8b0c500f27b8a1b299b"
+}

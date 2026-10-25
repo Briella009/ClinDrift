@@ -1,0 +1,30 @@
+name: Verify Frozen ClinDrift Experimental Evidence
+on:
+  push:
+    branches:
+      - masters/experiment-evaluation-2026-10-25
+    paths:
+      - .github/workflows/verify-locked-v2.yml
+      - evaluation/masters_nli/verify_locked_v2.py
+      - evaluation/masters_nli/archive_and_audit.py
+      - evaluation/experiments/2026-10-25/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-without-model-downloads:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify original model experiment audit
+        run: python evaluation/masters_nli/archive_and_audit.py
+      - name: Recalculate locked study counts and verify hashes
+        run: python evaluation/masters_nli/verify_locked_v2.py

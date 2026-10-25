@@ -1,0 +1,70 @@
+{
+  "dataset_development_sha256": "f44d009e4588ecc40031a6a444c23393de1f44720d4c7a351ba046a2dce98566",
+  "dataset_new_pilot_sha256": "1a4566694decb0f3253c6bd7a132f5b2fc224fbc328917462fe04bd2e1375242",
+  "development_nli_relation_counts": {
+    "contradiction": 70,
+    "entailment": 40,
+    "neutral": 30
+  },
+  "development_rules": {
+    "FN": 20,
+    "FP": 0,
+    "TN": 40,
+    "TP": 80,
+    "accuracy": 0.8571428571428571,
+    "f1": 0.888888888888889,
+    "false_positive_rate": 0.0,
+    "n": 140,
+    "precision": 1.0,
+    "recall": 0.8,
+    "specificity": 1.0
+  },
+  "leakage_audit": {
+    "exact_normalized_pair_overlap": 0,
+    "template_family_id_overlap": 0,
+    "warning": "Different declared family IDs do not prove semantic/template independence."
+  },
+  "new_pilot_rules": {
+    "FN": 80,
+    "FP": 20,
+    "TN": 60,
+    "TP": 120,
+    "accuracy": 0.6428571428571429,
+    "f1": 0.7058823529411764,
+    "false_positive_rate": 0.25,
+    "n": 280,
+    "precision": 0.8571428571428571,
+    "recall": 0.6,
+    "specificity": 0.75
+  },
+  "new_pilot_status": "pending human annotation review",
+  "pilot_category_counts": {
+    "afebrile_paraphrase_control": 20,
+    "consciousness_contradiction": 20,
+    "dose_contradiction": 20,
+    "dose_paraphrase_control": 20,
+    "frequency_paraphrase_control": 20,
+    "laterality_contradiction": 20,
+    "omitted_allergy": 20,
+    "omitted_medication": 20,
+    "pressure_contradiction": 20,
+    "schedule_contradiction": 20,
+    "symptom_course_contradiction": 20,
+    "unchanged_control": 20,
+    "unsupported_diagnosis": 20,
+    "unsupported_procedure": 20
+  },
+  "pilot_nli_relation_counts": {
+    "contradiction": 120,
+    "entailment": 80,
+    "neutral": 80
+  },
+  "predeclared_seed": 20261025,
+  "reporting_boundary": "This is a synthetic, author-generated, not independently adjudicated pilot. It is not the final master's held-out performance estimate, clinical validation, a medical-device claim, or a patient-safety outcome.",
+  "runtime": {
+    "cpu_count": 4,
+    "platform": "Linux-6.17.0-1022-azure-x86_64-with-glibc2.39",
+    "python": "3.11.17"
+  },
+  "timestamp_utc": "2026-10-25T06:24:43.256141+00:00"
+}

@@ -1,0 +1,27 @@
+{
+  "chosen_model": "MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli",
+  "chosen_revision_sha": "6f5cf0a2b59cabb106aca4c287eed12e357e90eb",
+  "ranking": [
+    {
+      "id": "general_factcheck_base",
+      "score": 1.0
+    },
+    {
+      "id": "general_minilm",
+      "score": 0.988648
+    },
+    {
+      "id": "biomedical_pubmedbert",
+      "score": 0.95625
+    },
+    {
+      "id": "general_small",
+      "score": 0.95625
+    }
+  ],
+  "registered_count": 4,
+  "reporting_boundary": "This is a synthetic, author-generated, not independently adjudicated pilot. It is not the final master's held-out performance estimate, clinical validation, a medical-device claim, or a patient-safety outcome.",
+  "selection_complete_four_candidates": true,
+  "status": "development-only candidate ranking; pilot not used",
+  "success_count": 4
+}

@@ -1,0 +1,77 @@
+name: Locked ClinDrift Synthetic Technical Evaluation
+on:
+  push:
+    branches:
+      - masters/experiment-evaluation-2026-10-25
+    paths:
+      - .github/workflows/locked-v2-evaluation.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: clindrift-locked-v2-evaluation
+  cancel-in-progress: false
+
+jobs:
+  locked-v2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      HF_HUB_DISABLE_TELEMETRY: '1'
+      HF_HUB_DISABLE_XET: '1'
+      TOKENIZERS_PARALLELISM: 'false'
+      OMP_NUM_THREADS: '2'
+      MKL_NUM_THREADS: '2'
+    steps:
+      - name: Checkout locked source
+        uses: actions/checkout@v4
+        with:
+          ref: masters/experiment-evaluation-2026-10-25
+          persist-credentials: true
+      - name: Set up deterministic Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install pinned CPU and evaluation dependencies
+        run: |
+          python -m pip install --disable-pip-version-check torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install --disable-pip-version-check transformers==4.48.3 huggingface-hub==0.28.1 sentencepiece==0.2.0 protobuf==5.29.3 numpy==1.26.4 scipy==1.14.1 rapidfuzz==3.11.0 psutil==6.1.1 safetensors==0.5.2
+          mkdir -p evaluation/experiments/2026-10-25/locked_v2
+          python -m pip freeze > evaluation/experiments/2026-10-25/locked_v2/PIP_FREEZE.txt
+          git rev-parse HEAD > evaluation/experiments/2026-10-25/locked_v2/SOURCE_COMMIT.txt
+      - name: Compile the predeclared generator and runner
+        run: |
+          python -m py_compile evaluation/masters_nli/locked_v2_data.py evaluation/masters_nli/locked_v2_run.py
+      - name: Execute frozen synthetic benchmark against pinned NLI
+        run: |
+          python -u evaluation/masters_nli/locked_v2_run.py --out evaluation/experiments/2026-10-25/locked_v2
+      - name: Save all results even when the experiment fails
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clindrift-locked-280-case-evaluation-${{ github.run_id }}
+          path: evaluation/experiments/2026-10-25/locked_v2
+          retention-days: 45
+          if-no-files-found: warn
+      - name: Commit complete unmodified synthetic evaluation results
+        if: success()
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import hashlib
+          root=Path("evaluation/experiments/2026-10-25/locked_v2")
+          entries=[]
+          for f in sorted(root.rglob("*")):
+            if f.is_file() and f.name!="SHA256SUMS.txt":
+              digest=hashlib.sha256(f.read_bytes()).hexdigest()
+              entries.append(f"{digest}  {f.relative_to(root)}")
+          (root/"SHA256SUMS.txt").write_text("\n".join(entries)+"\n")
+          print("Verified files:",len(entries))
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add evaluation/experiments/2026-10-25/locked_v2
+          git commit -m "Record locked second-wave synthetic hybrid evaluation and all raw model predictions"
+          git push origin HEAD:masters/experiment-evaluation-2026-10-25

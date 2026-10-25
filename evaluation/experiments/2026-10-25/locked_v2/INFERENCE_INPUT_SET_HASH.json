@@ -1,0 +1,6 @@
+{
+  "model_loaded_after_freeze": true,
+  "pair_count": 1880,
+  "pair_set_sha256": "8094756c7a5c7ca0d123fed0ce33a4df65a3fb0c6a43deb82dfab8c6bae817a8",
+  "retrieval_uses_no_gold_target_index": true
+}
