@@ -1,0 +1,61 @@
+name: Archive and Audit ClinDrift Experiments
+on:
+  push:
+    branches:
+      - masters/experiment-evaluation-2026-10-25
+    paths:
+      - .github/workflows/archive-masters-evidence.yml
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+concurrency:
+  group: clindrift-experiment-archive
+  cancel-in-progress: false
+
+jobs:
+  archive-and-verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout research branch
+        uses: actions/checkout@v4
+        with:
+          ref: masters/experiment-evaluation-2026-10-25
+          persist-credentials: true
+      - name: Fetch original unmodified GitHub Actions artifact ZIP
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p evaluation/experiments/2026-10-25/pilot_v1/raw
+          curl --fail --show-error --silent --location \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer ${GH_TOKEN}" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/Briella009/ClinDrift/actions/artifacts/12590051750/zip" \
+            --output evaluation/experiments/2026-10-25/pilot_v1/original_artifact.zip
+          echo "7d62af4e119f2b8e70ba2965ea68fdef40f44e13a055c042cfa859dabd28068e  evaluation/experiments/2026-10-25/pilot_v1/original_artifact.zip" | sha256sum --check
+      - name: Extract, recompute all results, and write SHA-256 manifest
+        run: |
+          python - <<'PY'
+          import zipfile
+          from pathlib import Path
+          root=Path("evaluation/experiments/2026-10-25/pilot_v1")
+          with zipfile.ZipFile(root/"original_artifact.zip") as z:
+              assert all(not p.startswith(("/", "../")) and ".." not in Path(p).parts for p in z.namelist())
+              z.extractall(root/"raw")
+          PY
+          python evaluation/masters_nli/archive_and_audit.py
+      - name: Commit reproducible evidence to research branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add evaluation/experiments/2026-10-25/pilot_v1
+          if git diff --cached --quiet; then
+            echo "Archived evidence already matches"
+          else
+            git commit -m "Archive raw Oct 25 ClinDrift experiment data with verified SHA-256 and audit"
+            git push origin HEAD:masters/experiment-evaluation-2026-10-25
+          fi
