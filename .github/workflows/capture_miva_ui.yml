@@ -68,6 +68,19 @@ jobs:
                   driver.execute_script("arguments[0].click()",hits[0])
                   wait.until(lambda d: required_text.lower() in d.find_element(By.TAG_NAME,"body").text.lower())
                   time.sleep(3)
+              def ensure_sidebar_open():
+                  before=driver.execute_script("""const e=document.querySelector('[data-testid="stSidebar"]'); return e?e.getBoundingClientRect().toJSON():null""")
+                  print("SIDEBAR BEFORE:",before)
+                  if before and before.get("x",0)<-20:
+                      buttons=driver.find_elements(By.CSS_SELECTOR,"[data-testid='stSidebarCollapsedControl'] button")
+                      if not buttons:
+                          buttons=driver.find_elements(By.CSS_SELECTOR,"[data-testid='stSidebarCollapsedControl']")
+                      print("EXPAND BUTTONS",len(buttons))
+                      if buttons:
+                          driver.execute_script("arguments[0].click()",buttons[0])
+                          time.sleep(2)
+                  after=driver.execute_script("""const e=document.querySelector('[data-testid="stSidebar"]'); return e?e.getBoundingClientRect().toJSON():null""")
+                  print("SIDEBAR AFTER:",after)
               def snap(fname):
                   driver.execute_script("window.scrollTo(0,0)")
                   time.sleep(1)
@@ -84,6 +97,7 @@ jobs:
               nav("Mutation Lab","Clinical Drift Mutation Lab")
               if "Injected mutations" not in driver.find_element(By.TAG_NAME,"body").text:
                   raise RuntimeError("No synthetic mutations visible in Mutation Lab")
+              ensure_sidebar_open()
               snap("clindrift-04-mutation-lab.png")
 
               nav("Audit Report","Download integrity report")
@@ -93,6 +107,7 @@ jobs:
                   time.sleep(2)
               if "clindrift_integrity_report.json" not in driver.page_source and "Download integrity report" not in driver.find_element(By.TAG_NAME,"body").text:
                   raise RuntimeError("No audit report available")
+              ensure_sidebar_open()
               snap("clindrift-05-audit-report.png")
           finally:
               driver.quit()
