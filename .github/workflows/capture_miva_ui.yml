@@ -1,0 +1,112 @@
+name: Capture MIVA ClinDrift UI evidence
+
+on:
+  push:
+    branches:
+      - docs/miva-prototype-capture
+
+permissions:
+  contents: write
+
+jobs:
+  screenshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install ClinDrift and browser automation
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+          python -m pip install selenium
+          google-chrome --version || chromium --version
+      - name: Capture actual Streamlit application screenshots
+        run: |
+          streamlit run app.py --server.headless=true --server.address=127.0.0.1 --server.port=8501 > /tmp/clindrift-streamlit.log 2>&1 &
+          echo $! > /tmp/clindrift-streamlit.pid
+          python - <<'PY'
+          import base64
+          import os
+          import pathlib
+          import time
+          import urllib.request
+          from selenium import webdriver
+          from selenium.webdriver.common.by import By
+          from selenium.webdriver.support.ui import WebDriverWait
+
+          url = "http://127.0.0.1:8501/_stcore/health"
+          for _ in range(60):
+              try:
+                  if "ok" in urllib.request.urlopen(url, timeout=2).read().decode().lower():
+                      break
+              except Exception:
+                  time.sleep(2)
+          else:
+              raise SystemExit("Application failed to start")
+
+          opt=webdriver.ChromeOptions()
+          for flag in ["--headless=new","--no-sandbox","--disable-dev-shm-usage","--disable-gpu","--window-size=1700,1400"]:
+              opt.add_argument(flag)
+          driver=webdriver.Chrome(options=opt)
+          wait=WebDriverWait(driver,50)
+          pathlib.Path("assets/screenshots").mkdir(parents=True, exist_ok=True)
+          try:
+              driver.get("http://127.0.0.1:8501")
+              wait.until(lambda d: d.find_elements(By.XPATH,"//button[contains(.,'Prepare full demo case')]"))
+              demo=driver.find_elements(By.XPATH,"//button[contains(.,'Prepare full demo case')]")[0]
+              driver.execute_script("arguments[0].click()",demo)
+              time.sleep(5)
+
+              def nav(label, required_text):
+                  radios=wait.until(lambda d: d.find_element(By.XPATH,"//div[@role='radiogroup']"))
+                  opts=radios.find_elements(By.CSS_SELECTOR,"label")
+                  hits=[x for x in opts if label in x.text]
+                  if not hits:
+                      raise RuntimeError("Radio option missing: "+label+" options="+str([x.text for x in opts]))
+                  driver.execute_script("arguments[0].click()",hits[0])
+                  wait.until(lambda d: required_text.lower() in d.find_element(By.TAG_NAME,"body").text.lower())
+                  time.sleep(3)
+              def snap(fname):
+                  driver.execute_script("window.scrollTo(0,0)")
+                  time.sleep(1)
+                  metrics=driver.execute_cdp_cmd("Page.getLayoutMetrics",{})
+                  full=metrics["contentSize"]
+                  width=min(round(full["width"]),1700)
+                  height=min(round(full["height"]),2000)
+                  shot=driver.execute_cdp_cmd("Page.captureScreenshot",{
+                      "format":"png","captureBeyondViewport":True,
+                      "clip":{"x":0,"y":0,"width":width,"height":height,"scale":1}
+                  })
+                  pathlib.Path("assets/screenshots",fname).write_bytes(base64.b64decode(shot["data"]))
+                  print("SAVED",fname, width, height)
+              nav("Mutation Lab","Clinical Drift Mutation Lab")
+              if "Injected mutations" not in driver.find_element(By.TAG_NAME,"body").text:
+                  raise RuntimeError("No synthetic mutations visible in Mutation Lab")
+              snap("clindrift-04-mutation-lab.png")
+
+              nav("Audit Report","Download integrity report")
+              exps=driver.find_elements(By.XPATH,"//*[contains(text(),'Preview JSON report')]")
+              if exps:
+                  driver.execute_script("arguments[0].click()",exps[0])
+                  time.sleep(2)
+              if "clindrift_integrity_report.json" not in driver.page_source and "Download integrity report" not in driver.find_element(By.TAG_NAME,"body").text:
+                  raise RuntimeError("No audit report available")
+              snap("clindrift-05-audit-report.png")
+          finally:
+              driver.quit()
+          PY
+          ls -lh assets/screenshots/clindrift-04-mutation-lab.png assets/screenshots/clindrift-05-audit-report.png
+      - name: Commit authentic UI screenshots to this documentation-only branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/screenshots/clindrift-04-mutation-lab.png assets/screenshots/clindrift-05-audit-report.png
+          git diff --cached --quiet || (git commit -m "docs: capture actual Mutation Lab and Audit Report UI for MIVA" && git push)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: clindrift-miva-genuine-ui-screenshots
+          path: |
+            assets/screenshots/clindrift-04-mutation-lab.png
+            assets/screenshots/clindrift-05-audit-report.png
