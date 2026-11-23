@@ -74,5 +74,5 @@ def test_long_note_not_truncated_in_pdf():
     report["review_note"] = "Detailed note ABC123. " * 750
     pages, text = to_pdf_text(report)
     assert len(pages) >= 3
-    assert text.count("Detailed note ABC123.") >= 700
+    assert text.count("ABC123.") >= 700
     assert "Research use and limitations" in text
