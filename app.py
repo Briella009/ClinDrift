@@ -1,6 +1,5 @@
 import json
 
-import pandas as pd
 import streamlit as st
 
 from src.drift_engine import compare_facts
@@ -39,6 +38,15 @@ div.stButton>button,div.stDownloadButton>button{
     font-size:.78rem;text-transform:uppercase;letter-spacing:.08em;
     color:#D15A84;font-weight:800
 }
+[data-testid="stMarkdownContainer"] p,
+[data-testid="stAlert"] p {overflow-wrap:anywhere;word-break:break-word}
+@media (max-width: 750px) {
+    .block-container {
+        padding:1rem 1rem 7rem;
+    }
+    [data-testid="stMetric"] {padding:.85rem}
+    h1 {font-size:2rem}
+}
 </style>
 """,
     unsafe_allow_html=True,
@@ -58,6 +66,9 @@ STATE_DEFAULTS = {
     "mutation_results": [],
     "analysis": None,
     "review_note_record": "",
+    "review_saved": False,
+    "action_feedback": "",
+    "action_status": "success",
 }
 
 for key, value in STATE_DEFAULTS.items():
@@ -79,6 +90,23 @@ def _sync_visible_text_widgets():
         st.session_state["evidence_review_note"] = st.session_state["review_note_record"]
 
 
+def _show_feedback():
+    message = st.session_state.get("action_feedback", "")
+    if message:
+        if st.session_state.get("action_status") == "warning":
+            st.warning(message)
+        else:
+            st.success(message)
+
+
+def _invalidate_analysis_and_review():
+    st.session_state["analysis"] = None
+    st.session_state["mutation_results"] = []
+    st.session_state["review_note_record"] = ""
+    st.session_state["review_saved"] = False
+    st.session_state["action_feedback"] = ""
+
+
 def sync_home_inputs():
     st.session_state["source_record"] = st.session_state.get(
         "home_source", st.session_state["source_record"]
@@ -86,9 +114,7 @@ def sync_home_inputs():
     st.session_state["transformed_record"] = st.session_state.get(
         "home_transformed", st.session_state["transformed_record"]
     )
-    st.session_state["analysis"] = None
-    # A manual edit invalidates the Mutation Lab's old ground truth.
-    st.session_state["mutation_results"] = []
+    _invalidate_analysis_and_review()
 
 
 def sync_mutation_inputs():
@@ -98,20 +124,26 @@ def sync_mutation_inputs():
     st.session_state["transformed_record"] = st.session_state.get(
         "mutation_transformed", st.session_state["transformed_record"]
     )
-    st.session_state["analysis"] = None
-    # Do not report stale injected mutations after manual editing.
-    st.session_state["mutation_results"] = []
+    _invalidate_analysis_and_review()
 
 
-def sync_review_note():
-    st.session_state["review_note_record"] = st.session_state.get(
-        "evidence_review_note", ""
-    )
+def mark_review_unsaved():
+    st.session_state["review_saved"] = False
+
+
+def save_review_note():
+    note = st.session_state.get("evidence_review_note", "")
+    st.session_state["review_note_record"] = note
+    st.session_state["review_saved"] = bool(note.strip())
 
 
 def analyse_current_inputs():
     source_text = st.session_state.get("source_record", DEFAULT_SOURCE)
     transformed_text = st.session_state.get("transformed_record", source_text)
+
+    if not source_text.strip() or not transformed_text.strip():
+        st.session_state["analysis"] = None
+        return
 
     source_facts = extract_facts(source_text)
     transformed_facts = extract_facts(transformed_text)
@@ -133,6 +165,11 @@ def reset_sample():
     st.session_state["mutation_results"] = []
     st.session_state["analysis"] = None
     st.session_state["review_note_record"] = ""
+    st.session_state["review_saved"] = False
+    st.session_state["action_feedback"] = (
+        "Clean sample loaded. No check has run yet."
+    )
+    st.session_state["action_status"] = "success"
     _sync_visible_text_widgets()
 
 
@@ -142,6 +179,9 @@ def clear_inputs():
     st.session_state["mutation_results"] = []
     st.session_state["analysis"] = None
     st.session_state["review_note_record"] = ""
+    st.session_state["review_saved"] = False
+    st.session_state["action_feedback"] = "Inputs cleared. No check has run."
+    st.session_state["action_status"] = "success"
     _sync_visible_text_widgets()
 
 
@@ -155,13 +195,28 @@ def generate_controlled_drift():
     st.session_state["transformed_record"] = mutated_text
     st.session_state["mutation_results"] = results
     st.session_state["analysis"] = None
+    st.session_state["review_note_record"] = ""
+    st.session_state["review_saved"] = False
+    applied_count = sum(bool(item.get("applied")) for item in results)
+    if applied_count:
+        st.session_state["action_feedback"] = (
+            f"{applied_count} controlled changes prepared. "
+            "Go to Integrity Check and press Run integrity check."
+        )
+        st.session_state["action_status"] = "success"
+    else:
+        st.session_state["action_feedback"] = (
+            "No controlled changes matched this text. "
+            "Load the clean sample first, then try again."
+        )
+        st.session_state["action_status"] = "warning"
     _sync_visible_text_widgets()
 
 
-def prepare_presentation_demo():
+def load_demo_example():
+    """Prepare the example without running the detector prematurely."""
     reset_sample()
     generate_controlled_drift()
-    analyse_current_inputs()
 
 
 def risk_level(findings, score):
@@ -207,16 +262,7 @@ with st.sidebar:
     )
 
     st.divider()
-    st.caption("Presentation shortcut")
-    st.button(
-        "Prepare full demo case",
-        on_click=prepare_presentation_demo,
-        width="stretch",
-        help=(
-            "Loads a safe sample, introduces controlled drift, and runs "
-            "the integrity check."
-        ),
-    )
+    st.caption("For a demonstration, select Load drift example on Home, then run the check.")
     st.caption(
         "Use synthetic, redacted, or explicitly authorised non-confidential data only."
     )
@@ -285,10 +331,14 @@ if page == "Home":
         )
     with c3:
         st.button(
-            "Prepare presentation demo",
-            on_click=prepare_presentation_demo,
+            "Load drift example",
+            on_click=load_demo_example,
             width="stretch",
+            help="Prepares synthetic changed text. Results only appear after you run the integrity check.",
         )
+
+    _show_feedback()
+    st.caption("Step 1: prepare the records. Step 2: open Integrity Check and run it.")
 
     st.subheader("What the current prototype checks")
     st.markdown(
@@ -344,20 +394,19 @@ elif page == "Mutation Lab":
         on_change=sync_mutation_inputs,
     )
 
+    _show_feedback()
     applied = [
         m for m in st.session_state.get("mutation_results", []) if m.get("applied")
     ]
     if applied:
         st.subheader("Injected mutations")
-        mutation_df = pd.DataFrame(applied).rename(
-            columns={
-                "mutation_type": "Mutation type",
-                "applied": "Applied",
-                "original_value": "Original value",
-                "mutated_value": "Mutated value",
-            }
-        )
-        st.dataframe(mutation_df, width="stretch", hide_index=True)
+        for index, mutation in enumerate(applied, 1):
+            with st.container(border=True):
+                st.markdown(f"**{index}. {mutation['mutation_type']}**")
+                st.write("**Original value**")
+                st.write(mutation.get("original_value") or "Not recorded")
+                st.write("**Mutated value**")
+                st.write(mutation.get("mutated_value") or "Not recorded")
     else:
         st.info("No controlled mutation has been generated in this session yet.")
 
@@ -373,31 +422,33 @@ elif page == "Integrity Check":
     transformed_record = st.session_state.get("transformed_record", "")
 
     with st.expander("Review the current inputs", expanded=False):
-        left, right = st.columns(2)
-        with left:
-            st.write("**Source**")
-            st.write(source_record or "No source text supplied.")
-        with right:
-            st.write("**Transformed**")
-            st.write(transformed_record or "No transformed text supplied.")
+        st.write("**Source**")
+        st.write(source_record or "No source text supplied.")
+        st.write("**Transformed**")
+        st.write(transformed_record or "No transformed text supplied.")
 
-    if not source_record.strip() or not transformed_record.strip():
+    ready = bool(source_record.strip() and transformed_record.strip())
+    if not ready:
         st.warning(
             "Both source and transformed text are required before the integrity "
             "check can run."
         )
-    else:
-        st.button(
-            "Run integrity check",
-            type="primary",
-            on_click=analyse_current_inputs,
-            width="stretch",
-        )
+    st.button(
+        "Run integrity check",
+        type="primary",
+        on_click=analyse_current_inputs,
+        disabled=not ready,
+        width="stretch",
+    )
 
     analysis = st.session_state.get("analysis")
     if analysis is None:
-        st.info("No analysis has been run for the current inputs yet.")
+        st.info("No results yet. Select Run integrity check to start the analysis.")
     else:
+        st.caption(
+            "Latest completed check. These results remain available in this "
+            "session until you change or clear the records."
+        )
         findings = analysis["findings"]
         score = analysis["score"]
         critical = sum(1 for f in findings if f.severity == "Critical")
@@ -410,18 +461,22 @@ elif page == "Integrity Check":
 
         if findings:
             st.error(analysis["status"])
-            findings_df = pd.DataFrame(
-                [
-                    {
-                        "Drift type": f.drift_type,
-                        "Severity": f.severity,
-                        "Source value": f.source_value,
-                        "Transformed value": f.transformed_value,
-                    }
-                    for f in findings
-                ]
-            )
-            st.dataframe(findings_df, width="stretch", hide_index=True)
+            st.subheader("Detected changes")
+            for index, finding in enumerate(findings, 1):
+                with st.container(border=True):
+                    st.markdown(f"**{index}. {finding.drift_type}**")
+                    st.caption(f"Severity: {finding.severity}")
+                    st.write("**Source value**")
+                    st.write(finding.source_value)
+                    st.write("**Transformed value**")
+                    st.write(finding.transformed_value)
+                    with st.expander("Supporting evidence and explanation"):
+                        st.write("**Source evidence**")
+                        st.write(finding.source_evidence)
+                        st.write("**Transformed evidence**")
+                        st.write(finding.transformed_evidence)
+                        st.write("**Why it was flagged**")
+                        st.write(finding.rationale)
         else:
             st.success(analysis["status"])
 
@@ -433,15 +488,14 @@ elif page == "Integrity Check":
         if applied:
             expected = [m["mutation_type"] for m in applied]
             detected = [f.drift_type for f in findings]
-            rows = [
-                {
-                    "Injected mutation": mutation_type,
-                    "Detected": "Yes" if mutation_type in detected else "No",
-                }
-                for mutation_type in expected
-            ]
             st.subheader("Controlled self-test")
-            st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
+            for mutation_type in expected:
+                with st.container(border=True):
+                    st.write(f"**Injected mutation:** {mutation_type}")
+                    st.write(
+                        "**Detected:** "
+                        + ("Yes" if mutation_type in detected else "No")
+                    )
 
 
 elif page == "Evidence":
@@ -450,18 +504,9 @@ elif page == "Evidence":
 
     if analysis is None:
         st.info(
-            "Run an integrity check first. You can also use 'Prepare full demo "
-            "case' in the sidebar."
+            "No results yet. Go to Integrity Check and select Run integrity check "
+            "before reviewing evidence."
         )
-        if (
-            st.session_state.get("source_record", "").strip()
-            and st.session_state.get("transformed_record", "").strip()
-        ):
-            st.button(
-                "Run integrity check now",
-                on_click=analyse_current_inputs,
-                width="stretch",
-            )
     else:
         findings = analysis["findings"]
 
@@ -480,19 +525,15 @@ elif page == "Evidence":
                     f"{index}. {finding.drift_type} - {finding.severity}",
                     expanded=True,
                 ):
-                    left, right = st.columns(2)
+                    st.write("**Source value**")
+                    st.write(finding.source_value)
+                    st.write("**Source evidence**")
+                    st.info(finding.source_evidence)
 
-                    with left:
-                        st.write("**Source value**")
-                        st.code(finding.source_value)
-                        st.write("**Source evidence**")
-                        st.info(finding.source_evidence)
-
-                    with right:
-                        st.write("**Transformed value**")
-                        st.code(finding.transformed_value)
-                        st.write("**Transformed evidence**")
-                        st.warning(finding.transformed_evidence)
+                    st.write("**Transformed value**")
+                    st.write(finding.transformed_value)
+                    st.write("**Transformed evidence**")
+                    st.warning(finding.transformed_evidence)
 
                     st.write("**Why it was flagged**")
                     st.write(finding.rationale)
@@ -505,19 +546,23 @@ elif page == "Evidence":
             "Reviewer note",
             key="evidence_review_note",
             height=100,
-            on_change=sync_review_note,
-            help="Optional note included in the PDF and JSON reports.",
+            on_change=mark_review_unsaved,
+            help="Select Save reviewer note to include it in both report formats.",
         )
         st.button(
             "Save reviewer note",
-            on_click=sync_review_note,
+            on_click=save_review_note,
             width="stretch",
             help="Save this note in the current session for both report formats.",
         )
-        if st.session_state["review_note_record"].strip():
+        draft_note = st.session_state.get("evidence_review_note", "")
+        saved_note = st.session_state.get("review_note_record", "")
+        if draft_note != saved_note:
+            st.warning("Unsaved changes. Select Save reviewer note before exporting.")
+        elif st.session_state["review_saved"] and saved_note.strip():
             st.success("Reviewer note saved for the PDF and JSON reports.")
         else:
-            st.caption("Type an optional review note, then select Save reviewer note.")
+            st.caption("Type an optional reviewer note, then select Save reviewer note.")
 
 
 elif page == "Audit Report":
@@ -525,17 +570,9 @@ elif page == "Audit Report":
 
     if st.session_state.get("analysis") is None:
         st.info(
-            "An integrity check must be run before an audit report can be generated."
+            "No report yet. Go to Integrity Check and select Run integrity check "
+            "before downloading a report."
         )
-        if (
-            st.session_state.get("source_record", "").strip()
-            and st.session_state.get("transformed_record", "").strip()
-        ):
-            st.button(
-                "Run integrity check now",
-                on_click=analyse_current_inputs,
-                width="stretch",
-            )
     else:
         report = build_report()
         st.write(
@@ -569,7 +606,7 @@ elif page == "Audit Report":
             )
 
         with st.expander("Preview JSON report", expanded=False):
-            st.code(report_json, language="json")
+            st.json(report, expanded=False)
 
 
 st.divider()

@@ -9,9 +9,9 @@ Use only synthetic, redacted, or explicitly authorised non-confidential text in 
 ## Recommended 3-minute demonstration
 
 1. Open the ClinDrift app and select **Home**.
-2. Select **Prepare presentation demo** or use **Prepare full demo case** in the sidebar.
+2. Select **Load drift example** on Home. This only prepares synthetic source and transformed records; it does not run an analysis.
 3. Open **Mutation Lab** to show the deliberately injected dosage, allergy, and duration changes.
-4. Open **Integrity Check** and show:
+4. Open **Integrity Check**, select **Run integrity check**, then show:
    - integrity score;
    - number of findings;
    - critical findings;
@@ -24,12 +24,13 @@ Use only synthetic, redacted, or explicitly authorised non-confidential text in 
 ## What is implemented now
 
 - Real sidebar navigation between Home, Mutation Lab, Integrity Check, Evidence, and Audit Report.
-- Safe presentation shortcut that loads a synthetic case, injects controlled drift, and runs the detector.
+- Explicit two-step workflow: **Load drift example** prepares the records; **Run integrity check** generates findings only after the click.
 - Working sample/reset/clear controls.
-- Working controlled-mutation generation.
+- Working controlled-mutation generation; no automatic analysis or stale mutation results after manual edits.
 - Working integrity analysis and evidence views.
 - Working PDF and JSON report downloads.
-- Explicit **Save reviewer note** action; reviewer note is displayed in Audit Report and retained in both PDF and JSON downloads during the session.
+- Explicit **Save reviewer note** action; unsaved drafts cannot silently replace the saved note in PDF or JSON exports.
+- Vertical, mobile-friendly cards for findings, evidence, controlled mutations, and self-test results.
 
 ## What is intentionally not claimed
 

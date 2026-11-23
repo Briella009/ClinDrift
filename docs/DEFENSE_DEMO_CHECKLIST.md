@@ -3,9 +3,9 @@
 ClinDrift is a research prototype for selected forms of clinical-text drift. Use the built-in synthetic demo, not patient records.
 
 1. Open the deployed Streamlit app; check that the Home page and five-page navigation appear.
-2. On **Home**, select **Prepare presentation demo**. Alternatively, use **Prepare full demo case** in the sidebar.
+2. On **Home**, select **Load drift example**. You should see the changed synthetic text and a confirmation. No results should be shown yet.
 3. Open **Mutation Lab**; show the injected changes and the changed text.
-4. Open **Integrity Check**, then select **Run integrity check**. Explain the integrity score, findings, severity and controlled self-test.
+4. Open **Integrity Check**. Confirm that results are absent until you select **Run integrity check**, then explain the score, findings, severity and controlled self-test.
 5. Open **Evidence**; expand at least one finding. Point out source evidence, transformed evidence and rationale.
 6. In **Reviewer note**, enter: "Clinician review required: verify the metformin dosage before approval." Select **Save reviewer note** and confirm the success message.
 7. Open **Audit Report**. Read the same reviewer note displayed on-screen.
