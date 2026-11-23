@@ -18,8 +18,8 @@ Use only synthetic, redacted, or explicitly authorised non-confidential text in 
    - risk level;
    - controlled self-test results.
 5. Open **Evidence** and expand each finding to show the source text, transformed text, and the reason it was flagged.
-6. Add an optional reviewer note to demonstrate human-in-the-loop review.
-7. Open **Audit Report** and download the PDF or JSON report, or preview the JSON report.
+6. On **Evidence**, enter a reviewer note, select **Save reviewer note**, and confirm that the note is saved for the current session.
+7. Open **Audit Report** and confirm the reviewer note is displayed. Download both PDF and JSON reports, and verify the same note and findings appear in each. You can also preview the JSON report.
 
 ## What is implemented now
 
@@ -29,7 +29,7 @@ Use only synthetic, redacted, or explicitly authorised non-confidential text in 
 - Working controlled-mutation generation.
 - Working integrity analysis and evidence views.
 - Working PDF and JSON report downloads.
-- Optional reviewer note retained in the demonstration report.
+- Explicit **Save reviewer note** action; reviewer note is displayed in Audit Report and retained in both PDF and JSON downloads during the session.
 
 ## What is intentionally not claimed
 
