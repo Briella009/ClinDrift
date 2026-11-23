@@ -7,6 +7,7 @@ from src.drift_engine import compare_facts
 from src.extractor import extract_facts
 from src.mutations import apply_all_mutations
 from src.scoring import integrity_score, review_status
+from src.pdf_report import generate_audit_pdf
 
 
 st.set_page_config(
@@ -529,13 +530,23 @@ elif page == "Audit Report":
         )
         report_json = json.dumps(report, indent=2)
 
-        st.download_button(
-            "Download integrity report",
-            data=report_json,
-            file_name="clindrift_integrity_report.json",
-            mime="application/json",
-            width="stretch",
-        )
+        left, right = st.columns(2, gap="medium")
+        with left:
+            st.download_button(
+                "Download PDF report",
+                data=generate_audit_pdf(report),
+                file_name="clindrift_integrity_report.pdf",
+                mime="application/pdf",
+                width="stretch",
+            )
+        with right:
+            st.download_button(
+                "Download JSON report",
+                data=report_json,
+                file_name="clindrift_integrity_report.json",
+                mime="application/json",
+                width="stretch",
+            )
 
         with st.expander("Preview JSON report", expanded=False):
             st.code(report_json, language="json")

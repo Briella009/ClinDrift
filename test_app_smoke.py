@@ -98,4 +98,4 @@ def test_audit_report_renders_after_analysis():
     navigate(app, "Audit Report")
     assert not app.exception
     assert app.session_state["analysis"] is not None
-    assert len(app.download_button) >= 1
+    assert len(app.download_button) == 2

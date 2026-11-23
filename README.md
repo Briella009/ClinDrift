@@ -76,7 +76,7 @@ ClinDrift v0.1 currently provides:
 - human-review signalling
 - controlled mutation generation
 - mutation detection self-testing
-- downloadable JSON audit reports
+- downloadable PDF and JSON audit reports
 - UK and Canada research context
 - documented research methodology
 - explicit prototype limitations
@@ -225,6 +225,7 @@ ClinDrift-v0.1/
 │   ├── extractor.py
 │   ├── drift_engine.py
 │   ├── scoring.py
+│   ├── pdf_report.py
 │   └── mutations.py
 │
 └── tests/
@@ -248,7 +249,7 @@ The current ClinDrift workflow is:
 9. Evidence is linked to each finding.
 10. An integrity score is calculated.
 11. Human review is requested when safety-relevant drift is detected.
-12. An audit report can be downloaded.
+12. An audit report can be downloaded as a PDF or JSON file.
 
 ---
 
