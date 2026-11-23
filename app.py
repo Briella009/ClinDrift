@@ -87,6 +87,8 @@ def sync_home_inputs():
         "home_transformed", st.session_state["transformed_record"]
     )
     st.session_state["analysis"] = None
+    # A manual edit invalidates the Mutation Lab's old ground truth.
+    st.session_state["mutation_results"] = []
 
 
 def sync_mutation_inputs():
@@ -97,6 +99,8 @@ def sync_mutation_inputs():
         "mutation_transformed", st.session_state["transformed_record"]
     )
     st.session_state["analysis"] = None
+    # Do not report stale injected mutations after manual editing.
+    st.session_state["mutation_results"] = []
 
 
 def sync_review_note():
@@ -502,8 +506,18 @@ elif page == "Evidence":
             key="evidence_review_note",
             height=100,
             on_change=sync_review_note,
-            help="Optional note stored in the demonstration audit report.",
+            help="Optional note included in the PDF and JSON reports.",
         )
+        st.button(
+            "Save reviewer note",
+            on_click=sync_review_note,
+            width="stretch",
+            help="Save this note in the current session for both report formats.",
+        )
+        if st.session_state["review_note_record"].strip():
+            st.success("Reviewer note saved for the PDF and JSON reports.")
+        else:
+            st.caption("Type an optional review note, then select Save reviewer note.")
 
 
 elif page == "Audit Report":
@@ -529,6 +543,12 @@ elif page == "Audit Report":
             "controlled-mutation record and reviewer note."
         )
         report_json = json.dumps(report, indent=2)
+        st.subheader("Human review note")
+        if report["review_note"].strip():
+            st.info(report["review_note"])
+            st.caption("This note is included in both report downloads.")
+        else:
+            st.caption("No reviewer note recorded. Add one on the Evidence page.")
 
         left, right = st.columns(2, gap="medium")
         with left:
