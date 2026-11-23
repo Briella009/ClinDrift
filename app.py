@@ -449,7 +449,6 @@ elif page == "Integrity Check":
             "Latest completed check. These results remain available in this "
             "session until you change or clear the records."
         )
-    else:
         findings = analysis["findings"]
         score = analysis["score"]
         critical = sum(1 for f in findings if f.severity == "Critical")
